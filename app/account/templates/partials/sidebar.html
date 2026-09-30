@@ -1,0 +1,31 @@
+<aside class="sidebar">
+  <div class="brand"><i class="bi bi-person-heart"></i> حساب کاربری</div>
+  <nav class="nav flex-column">
+    <a class="nav-link {% if active_page == 'dashboard' %}active{% endif %}" href="/account">
+      <i class="bi bi-speedometer2"></i> داشبورد
+    </a>
+    <a class="nav-link {% if active_page == 'orders' %}active{% endif %}" href="/account/orders">
+      <i class="bi bi-receipt"></i> سفارش‌های من
+    </a>
+    <a class="nav-link {% if active_page == 'addresses' %}active{% endif %}" href="/account/addresses">
+      <i class="bi bi-geo-alt"></i> آدرس‌های من
+    </a>
+    <a class="nav-link {% if active_page == 'wallet' %}active{% endif %}" href="/account/wallet">
+      <i class="bi bi-wallet2"></i> کیف پول
+    </a>
+    <a class="nav-link {% if active_page == 'returns' %}active{% endif %}" href="/account/returns">
+      <i class="bi bi-arrow-return-left"></i> مرجوعی‌های من
+    </a>
+    <a class="nav-link {% if active_page == 'tickets' %}active{% endif %}" href="/account/tickets">
+      <i class="bi bi-headset"></i> تیکت‌های پشتیبانی
+    </a>
+
+    <div class="sidebar-heading">حساب کاربری</div>
+    <a class="nav-link {% if active_page == 'profile' %}active{% endif %}" href="/account/profile">
+      <i class="bi bi-person"></i> پروفایل و رمز عبور
+    </a>
+    <a class="nav-link {% if active_page == 'wholesale' %}active{% endif %}" href="/account/profile/wholesale">
+      <i class="bi bi-briefcase"></i> همکاری عمده
+    </a>
+  </nav>
+</aside>

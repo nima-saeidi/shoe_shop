@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}سفارش {{ order.order_number }}{% endblock %}
+{% block page_title %}سفارش {{ order.order_number }}{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="panel mb-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">اقلام سفارش</h5>
+        <div class="d-flex gap-2">
+          {% if order.order_type.value == "wholesale" %}
+          <span class="badge-status bg-indigo text-white">سفارش عمده</span>
+          {% else %}
+          <span class="badge-status bg-light text-dark border">سفارش خرد</span>
+          {% endif %}
+          {% if order.is_manual %}<span class="badge-soft">ثبت دستی توسط {{ order.created_by.full_name if order.created_by else "ادمین" }}</span>{% endif %}
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table">
+          <thead><tr><th>محصول</th><th>سایز</th><th>رنگ</th><th>تعداد</th><th>قیمت واحد</th><th>جمع</th></tr></thead>
+          <tbody>
+            {% for item in order.items %}
+            <tr>
+              <td>{{ item.product_name }}</td>
+              <td>{{ item.size }}</td>
+              <td>{{ item.color }}</td>
+              <td>{{ item.quantity }}</td>
+              <td>{{ item.unit_price|toman }}</td>
+              <td>{{ item.line_total|toman }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="text-end">
+        <div>جمع جزء: {{ order.subtotal|toman }} تومان</div>
+        <div>تخفیف: -{{ order.discount_total|toman }} تومان</div>
+        <div>هزینه ارسال: {{ order.shipping_cost|toman }} تومان</div>
+        <div class="fs-5 fw-bold">مبلغ نهایی: {{ order.grand_total|toman }} تومان</div>
+      </div>
+    </div>
+    <div class="panel">
+      <h5 class="mb-3">اطلاعات ارسال</h5>
+      <p class="mb-1"><strong>{{ order.shipping_full_name }}</strong> — <span dir="ltr">{{ order.shipping_phone }}</span></p>
+      <p class="mb-1">{{ order.shipping_address }}، {{ order.shipping_city }}، کد پستی: <span dir="ltr">{{ order.shipping_postal_code }}</span></p>
+      {% if order.tracking_code %}
+      <p class="mb-1">شرکت ارسال: {{ order.shipping_provider or "-" }} | کد رهگیری: <span dir="ltr" class="fw-semibold">{{ order.tracking_code }}</span></p>
+      {% endif %}
+      {% if order.notes %}<p class="text-muted">توضیحات: {{ order.notes }}</p>{% endif %}
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="panel">
+      <h5 class="mb-3">به‌روزرسانی سفارش</h5>
+      <form method="post" action="/admin/orders/{{ order.id }}/status">
+        <div class="mb-3">
+          <label class="form-label">وضعیت سفارش</label>
+          <select name="status" class="form-select">
+            {% for s in status_options %}
+            <option value="{{ s }}" {% if order.status.value == s %}selected{% endif %}>{{ t("order_status", s) }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">وضعیت پرداخت</label>
+          <select name="payment_status" class="form-select">
+            {% for s in payment_status_options %}
+            <option value="{{ s }}" {% if order.payment_status.value == s %}selected{% endif %}>{{ t("payment_status", s) }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">شرکت/روش ارسال</label>
+          <select name="shipping_provider" class="form-select">
+            <option value="">— انتخاب نشده —</option>
+            {% for p in shipping_providers %}
+            <option value="{{ p }}" {% if order.shipping_provider == p %}selected{% endif %}>{{ p }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">کد رهگیری مرسوله</label>
+          <input type="text" name="tracking_code" class="form-control" dir="ltr" value="{{ order.tracking_code or '' }}" placeholder="مثلاً کد بیجک یا کد پستی">
+          <div class="form-text">با ثبت کد رهگیری و تغییر وضعیت، پیامک اطلاع‌رسانی به مشتری ارسال می‌شود.</div>
+        </div>
+        <button class="btn btn-brand w-100">به‌روزرسانی</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

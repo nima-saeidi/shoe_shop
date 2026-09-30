@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}تیکت‌های پشتیبانی{% endblock %}
+{% block page_title %}تیکت‌های پشتیبانی{% endblock %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <form class="d-flex gap-2" method="get">
+      <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+        <option value="">همه وضعیت‌ها</option>
+        <option value="open" {% if status_filter == "open" %}selected{% endif %}>باز</option>
+        <option value="answered" {% if status_filter == "answered" %}selected{% endif %}>پاسخ داده شده</option>
+        <option value="closed" {% if status_filter == "closed" %}selected{% endif %}>بسته شده</option>
+      </select>
+    </form>
+  </div>
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>موضوع</th><th>مشتری</th><th>وضعیت</th><th>آخرین بروزرسانی</th><th></th></tr></thead>
+      <tbody>
+        {% for ticket in tickets %}
+        <tr>
+          <td class="fw-semibold">{{ ticket.subject }}</td>
+          <td>{{ ticket.user.full_name if ticket.user else "-" }}</td>
+          <td>
+            <span class="badge-status bg-{{ 'warning-subtle text-warning' if ticket.status.value == 'open' else ('success-subtle text-success' if ticket.status.value == 'answered' else 'secondary-subtle text-secondary') }}">
+              {{ t("ticket_status", ticket.status) }}
+            </span>
+          </td>
+          <td>{{ ticket.updated_at.strftime("%Y-%m-%d %H:%M") }}</td>
+          <td class="text-end"><a href="/admin/tickets/{{ ticket.id }}" class="btn btn-sm btn-outline-secondary">مشاهده</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">تیکتی ثبت نشده است</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

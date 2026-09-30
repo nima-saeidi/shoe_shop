@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}{{ "ویرایش محصول" if product else "محصول جدید" }}{% endblock %}
+{% block page_title %}{{ "ویرایش محصول" if product else "محصول جدید" }}{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="panel mb-3">
+      <h5 class="mb-3">اطلاعات پایه</h5>
+      <form method="post" action="{{ '/admin/products/' ~ product.id ~ '/edit' if product else '/admin/products/new' }}" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label class="form-label">نام محصول</label>
+          <input type="text" name="name" class="form-control" value="{{ product.name if product else '' }}" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">توضیحات</label>
+          <textarea name="description" class="form-control" rows="4">{{ product.description if product and product.description else '' }}</textarea>
+        </div>
+
+        <h6 class="text-muted mt-4 mb-2">قیمت‌گذاری خرد</h6>
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label">قیمت (تومان)</label>
+            <input type="number" step="0.01" name="price" class="form-control" value="{{ product.price if product else '' }}" required>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">قیمت با تخفیف</label>
+            <input type="number" step="0.01" name="discount_price" class="form-control" value="{{ product.discount_price if product and product.discount_price else '' }}">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">کد کالا (SKU)</label>
+            <input type="text" name="sku" class="form-control" dir="ltr" value="{{ product.sku if product else '' }}" {% if product %}readonly{% endif %} required>
+          </div>
+        </div>
+
+        <h6 class="text-muted mt-3 mb-2">قیمت‌گذاری عمده</h6>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">قیمت عمده (هر واحد)</label>
+            <input type="number" step="0.01" name="wholesale_price" class="form-control" value="{{ product.wholesale_price if product and product.wholesale_price else '' }}" placeholder="در صورت خالی بودن، عمده‌فروش‌ها نیز قیمت خرد را پرداخت می‌کنند">
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">حداقل تعداد برای قیمت عمده</label>
+            <input type="number" name="wholesale_min_qty" class="form-control" value="{{ product.wholesale_min_qty if product else 1 }}" min="1">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label">جنسیت</label>
+            <select name="gender" class="form-select">
+              {% for g in ["unisex", "men", "women", "kids"] %}
+              <option value="{{ g }}" {% if product and product.gender == g %}selected{% endif %}>{{ t("gender", g) }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">دسته‌بندی</label>
+            <select name="category_id" class="form-select" required>
+              {% for c in categories %}
+              <option value="{{ c.id }}" {% if product and product.category_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">برند</label>
+            <select name="brand_id" class="form-select" required>
+              {% for b in brands %}
+              <option value="{{ b.id }}" {% if product and product.brand_id == b.id %}selected{% endif %}>{{ b.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        {% if not product %}
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">سایزها (با کاما جدا کنید)</label>
+            <input type="text" name="sizes" class="form-control" placeholder="38, 39, 40, 41, 42">
+          </div>
+          <div class="col-md-4 mb-3">
+            <label class="form-label">رنگ‌ها (با کاما جدا کنید)</label>
+            <input type="text" name="colors" class="form-control" placeholder="مشکی, سفید">
+          </div>
+          <div class="col-md-2 mb-3">
+            <label class="form-label">موجودی هر ورینت</label>
+            <input type="number" name="stock_quantity" class="form-control" value="10">
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">تصاویر محصول</label>
+          <input type="file" name="files" class="form-control" accept="image/*" multiple>
+          <div class="form-text">می‌توانید همین الان چند عکس از این کفش انتخاب کنید؛ برای برچسب‌زدن هر عکس به یک رنگ خاص، بعد از ذخیره از بخش ویرایش محصول اقدام کنید.</div>
+        </div>
+        {% endif %}
+
+        <div class="d-flex gap-4 mb-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" name="is_active" value="true" id="isActive" {% if not product or product.is_active %}checked{% endif %}>
+            <label class="form-check-label" for="isActive">فعال</label>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" name="is_featured" value="true" id="isFeatured" {% if product and product.is_featured %}checked{% endif %}>
+            <label class="form-check-label" for="isFeatured">محصول ویژه</label>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-brand">ذخیره</button>
+        <a href="/admin/products" class="btn btn-light">انصراف</a>
+      </form>
+    </div>
+
+    {% if product %}
+    <div class="panel mb-3">
+      <h5 class="mb-3">ورینت‌ها (سایز / رنگ / موجودی)</h5>
+      <div class="table-responsive mb-3">
+        <table class="table table-sm">
+          <thead><tr><th>سایز</th><th>رنگ</th><th>موجودی</th><th>قیمت اضافه</th><th></th></tr></thead>
+          <tbody>
+            {% for v in product.variants %}
+            <tr>
+              <td>{{ v.size }}</td>
+              <td>{{ v.color }}</td>
+              <td>{{ v.stock_quantity }}</td>
+              <td>{{ v.extra_price }}</td>
+              <td>
+                <form action="/admin/products/variants/{{ v.id }}/delete?product_id={{ product.id }}" method="post" data-confirm="این ورینت حذف شود؟">
+                  <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                </form>
+              </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center text-muted py-3">ورینتی ثبت نشده است</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <form action="/admin/products/{{ product.id }}/variants" method="post" class="row g-2">
+        <div class="col-md-3"><input type="text" name="size" class="form-control form-control-sm" placeholder="سایز" required></div>
+        <div class="col-md-3"><input type="text" name="color" class="form-control form-control-sm" placeholder="رنگ" required></div>
+        <div class="col-md-2"><input type="number" name="stock_quantity" class="form-control form-control-sm" placeholder="موجودی" value="0"></div>
+        <div class="col-md-2"><input type="number" step="0.01" name="extra_price" class="form-control form-control-sm" placeholder="قیمت اضافه" value="0"></div>
+        <div class="col-md-2"><button class="btn btn-sm btn-brand w-100">افزودن</button></div>
+      </form>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="col-lg-4">
+    {% if product %}
+    {% set colors = product.variants | map(attribute="color") | unique | list %}
+    <div class="panel">
+      <h5 class="mb-3">تصاویر (چند طرح/رنگ برای این کفش)</h5>
+      <div class="image-grid mb-3">
+        {% for img in product.images %}
+        <div class="image-card">
+          <img src="{{ img.image_url }}">
+          {% if img.is_primary %}<span class="position-absolute top-0 start-0 m-1 badge bg-success">اصلی</span>{% endif %}
+          {% if img.color %}<span class="position-absolute bottom-0 start-0 m-1 badge bg-dark bg-opacity-75">{{ img.color }}</span>{% endif %}
+          <div class="position-absolute top-0 end-0 m-1 d-flex gap-1">
+            {% if not img.is_primary %}
+            <form action="/admin/products/images/{{ img.id }}/primary?product_id={{ product.id }}" method="post">
+              <button class="btn btn-sm btn-light py-0 px-1" title="تنظیم به‌عنوان تصویر اصلی"><i class="bi bi-star"></i></button>
+            </form>
+            {% endif %}
+            <form action="/admin/products/images/{{ img.id }}/delete?product_id={{ product.id }}" method="post">
+              <button class="btn btn-sm btn-danger py-0 px-1"><i class="bi bi-x"></i></button>
+            </form>
+          </div>
+        </div>
+        {% else %}
+        <p class="text-muted small">هنوز تصویری آپلود نشده است</p>
+        {% endfor %}
+      </div>
+      <form action="/admin/products/{{ product.id }}/images" method="post" enctype="multipart/form-data">
+        <label class="form-label small">انتخاب عکس‌ها (می‌توانید چند عکس را هم‌زمان انتخاب کنید)</label>
+        <input type="file" name="files" class="form-control form-control-sm mb-2" required accept="image/*" multiple>
+        <label class="form-label small">مربوط به کدام رنگ/طرح است؟ (اختیاری)</label>
+        <select name="color" class="form-select form-select-sm mb-2">
+          <option value="">همه رنگ‌ها / عمومی</option>
+          {% for c in colors %}
+          <option value="{{ c }}">{{ c }}</option>
+          {% endfor %}
+        </select>
+        <button class="btn btn-sm btn-brand w-100">آپلود عکس‌ها</button>
+      </form>
+    </div>
+    {% else %}
+    <div class="panel text-muted small">برای مدیریت تصاویر و ورینت‌ها، ابتدا محصول را ذخیره کنید.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}تیکت: {{ ticket.subject }}{% endblock %}
+{% block page_title %}تیکت: {{ ticket.subject }}{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="panel">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-muted">مشتری: {{ ticket.user.full_name if ticket.user else "-" }}</span>
+        <span class="badge-status bg-{{ 'warning-subtle text-warning' if ticket.status.value == 'open' else ('success-subtle text-success' if ticket.status.value == 'answered' else 'secondary-subtle text-secondary') }}">
+          {{ t("ticket_status", ticket.status) }}
+        </span>
+      </div>
+      <div class="mb-4">
+        {% for msg in ticket.messages %}
+        <div class="d-flex flex-column">
+          <div class="chat-bubble {{ 'admin' if msg.is_admin else 'customer' }}">
+            {{ msg.message }}
+          </div>
+          <small class="text-muted {{ 'text-end' if msg.is_admin else '' }} mb-2">
+            {{ "پشتیبانی" if msg.is_admin else (msg.sender.full_name if msg.sender else "مشتری") }} —
+            {{ msg.created_at.strftime("%Y-%m-%d %H:%M") }}
+          </small>
+        </div>
+        {% endfor %}
+      </div>
+      {% if ticket.status.value != "closed" %}
+      <form method="post" action="/admin/tickets/{{ ticket.id }}/reply">
+        <textarea name="message" class="form-control mb-2" rows="3" placeholder="پاسخ خود را بنویسید..." required></textarea>
+        <button class="btn btn-brand">ارسال پاسخ</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="panel">
+      <h6 class="mb-3">عملیات</h6>
+      {% if ticket.status.value != "closed" %}
+      <form method="post" action="/admin/tickets/{{ ticket.id }}/close" data-confirm="این تیکت بسته شود؟">
+        <button class="btn btn-outline-danger w-100"><i class="bi bi-x-circle"></i> بستن تیکت</button>
+      </form>
+      {% else %}
+      <p class="text-muted small mb-0">این تیکت بسته شده است.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

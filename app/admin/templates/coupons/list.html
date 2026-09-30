@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}کدهای تخفیف{% endblock %}
+{% block page_title %}کدهای تخفیف{% endblock %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="text-muted">{{ total }} کد تخفیف</span>
+    <a href="/admin/coupons/new" class="btn btn-brand btn-sm"><i class="bi bi-plus-lg"></i> کد تخفیف جدید</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>کد</th><th>نوع</th><th>مقدار</th><th>میزان استفاده</th><th>وضعیت</th><th></th></tr></thead>
+      <tbody>
+        {% for coupon in coupons %}
+        <tr>
+          <td class="fw-semibold" dir="ltr">{{ coupon.code }}</td>
+          <td>{{ t("discount_type", coupon.discount_type) }}</td>
+          <td>{{ coupon.discount_value }}{% if coupon.discount_type.value == "percent" %}٪{% endif %}</td>
+          <td>{{ coupon.used_count }}{% if coupon.max_uses %} / {{ coupon.max_uses }}{% endif %}</td>
+          <td>
+            {% if coupon.is_active %}
+            <span class="badge-status bg-success-subtle text-success">فعال</span>
+            {% else %}
+            <span class="badge-status bg-secondary-subtle text-secondary">غیرفعال</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <form action="/admin/coupons/{{ coupon.id }}/toggle-active" method="post" class="d-inline">
+              <button class="btn btn-sm btn-outline-secondary"><i class="bi bi-toggle2-on"></i></button>
+            </form>
+            <form action="/admin/coupons/{{ coupon.id }}/delete" method="post" class="d-inline" data-confirm="این کد تخفیف حذف شود؟">
+              <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">کد تخفیفی ثبت نشده است</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

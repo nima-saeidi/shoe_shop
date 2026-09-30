@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}مرجوعی‌های من{% endblock %}
+{% block page_title %}مرجوعی‌های من{% endblock %}
+{% block content %}
+<div class="panel">
+  <p class="text-muted small mb-3">برای ثبت درخواست مرجوعی، از صفحه‌ی سفارش تحویل‌داده‌شده روی «درخواست مرجوعی» کلیک کنید.</p>
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>سفارش</th><th>محصول</th><th>دلیل</th><th>توضیحات</th><th>وضعیت</th></tr></thead>
+      <tbody>
+        {% for r in returns %}
+        <tr>
+          <td><a href="/account/orders/{{ r.order_id }}">{{ r.order.order_number if r.order else r.order_id }}</a></td>
+          <td>{{ r.order_item.product_name if r.order_item else "-" }} ({{ r.order_item.size }}/{{ r.order_item.color }})</td>
+          <td>{{ t("return_reason", r.reason) }}</td>
+          <td class="text-muted">{{ r.description or "-" }}</td>
+          <td>
+            <span class="badge-status bg-{{ 'warning-subtle text-warning' if r.status.value == 'pending' else ('success-subtle text-success' if r.status.value in ['approved','completed'] else 'secondary-subtle text-secondary') }}">
+              {{ t("return_status", r.status) }}
+            </span>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">درخواست مرجوعی‌ای ثبت نکرده‌اید</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

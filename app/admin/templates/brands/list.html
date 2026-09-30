@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}برندها{% endblock %}
+{% block page_title %}برندها{% endblock %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="text-muted">{{ total }} برند</span>
+    <a href="/admin/brands/new" class="btn btn-brand btn-sm"><i class="bi bi-plus-lg"></i> برند جدید</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>لوگو</th><th>نام</th><th>اسلاگ</th><th>وضعیت</th><th></th></tr></thead>
+      <tbody>
+        {% for brand in brands %}
+        <tr>
+          <td>{% if brand.logo_url %}<img src="{{ brand.logo_url }}" class="thumb">{% else %}<div class="thumb"></div>{% endif %}</td>
+          <td class="fw-semibold">{{ brand.name }}</td>
+          <td class="text-muted" dir="ltr">{{ brand.slug }}</td>
+          <td>
+            {% if brand.is_active %}
+            <span class="badge-status bg-success-subtle text-success">فعال</span>
+            {% else %}
+            <span class="badge-status bg-secondary-subtle text-secondary">غیرفعال</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <a href="/admin/brands/{{ brand.id }}/edit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+            <form action="/admin/brands/{{ brand.id }}/delete" method="post" class="d-inline" data-confirm="این برند حذف شود؟">
+              <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">برندی ثبت نشده است</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

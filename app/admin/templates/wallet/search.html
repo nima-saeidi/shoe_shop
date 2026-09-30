@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}کیف پول مشتریان{% endblock %}
+{% block page_title %}کیف پول مشتریان{% endblock %}
+{% block content %}
+<div class="panel">
+  <form class="d-flex gap-2 mb-3" method="get">
+    <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="جستجو بر اساس ایمیل یا شماره موبایل...">
+    <button class="btn btn-brand">جستجو</button>
+  </form>
+  {% if users %}
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>نام</th><th>ایمیل</th><th>موبایل</th><th>موجودی کیف پول</th><th></th></tr></thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td class="fw-semibold">{{ u.full_name }}</td>
+          <td dir="ltr" class="text-muted">{{ u.email }}</td>
+          <td dir="ltr">{{ u.phone_number or "-" }}</td>
+          <td>{{ u.wallet_balance|toman }} تومان</td>
+          <td class="text-end"><a href="/admin/wallet/{{ u.id }}" class="btn btn-sm btn-outline-secondary">مشاهده و شارژ</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% elif q %}
+  <p class="text-muted text-center py-4">کاربری یافت نشد</p>
+  {% else %}
+  <p class="text-muted text-center py-4">برای مشاهده کیف پول، مشتری را جستجو کنید</p>
+  {% endif %}
+</div>
+{% endblock %}

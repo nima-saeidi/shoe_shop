@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ "ویرایش برند" if brand else "برند جدید" }}{% endblock %}
+{% block page_title %}{{ "ویرایش برند" if brand else "برند جدید" }}{% endblock %}
+{% block content %}
+<div class="panel" style="max-width: 640px;">
+  <form method="post" action="{{ '/admin/brands/' ~ brand.id ~ '/edit' if brand else '/admin/brands/new' }}" enctype="multipart/form-data">
+    <div class="mb-3">
+      <label class="form-label">نام برند</label>
+      <input type="text" name="name" class="form-control" value="{{ brand.name if brand else '' }}" required>
+    </div>
+    {% if not brand %}
+    <div class="mb-3">
+      <label class="form-label">فایل لوگو</label>
+      <input type="file" name="logo_file" class="form-control" accept="image/*">
+      <div class="form-text">یا در صورت تمایل، به‌جای آپلود فایل، آدرس تصویر را وارد کنید.</div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">آدرس تصویر لوگو (اختیاری)</label>
+      <input type="text" name="logo_url" class="form-control" dir="ltr">
+    </div>
+    {% else %}
+    <div class="mb-3">
+      <label class="form-label">آدرس تصویر لوگو</label>
+      <input type="text" name="logo_url" class="form-control" dir="ltr" value="{{ brand.logo_url if brand.logo_url else '' }}">
+      <div class="form-text">یا از بخش زیر مستقیماً فایل لوگو را آپلود کنید.</div>
+    </div>
+    {% endif %}
+    <div class="form-check form-switch mb-3">
+      <input class="form-check-input" type="checkbox" name="is_active" value="true" id="isActive" {% if not brand or brand.is_active %}checked{% endif %}>
+      <label class="form-check-label" for="isActive">فعال</label>
+    </div>
+    <button type="submit" class="btn btn-brand">ذخیره</button>
+    <a href="/admin/brands" class="btn btn-light">انصراف</a>
+  </form>
+
+  {% if brand %}
+  <hr class="my-4">
+  <h6 class="mb-3">آپلود فایل لوگو</h6>
+  <div class="d-flex align-items-center gap-3">
+    {% if brand.logo_url %}<img src="{{ brand.logo_url }}" class="thumb" style="width:64px;height:64px;">{% endif %}
+    <form action="/admin/brands/{{ brand.id }}/logo" method="post" enctype="multipart/form-data" class="flex-grow-1 d-flex gap-2">
+      <input type="file" name="file" class="form-control form-control-sm" accept="image/*" required>
+      <button class="btn btn-sm btn-brand text-nowrap">آپلود</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

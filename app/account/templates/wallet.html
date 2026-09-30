@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}کیف پول{% endblock %}
+{% block page_title %}کیف پول{% endblock %}
+{% block content %}
+<div class="panel mb-3 text-center">
+  <div class="text-muted small mb-1">موجودی فعلی</div>
+  <div class="fs-2 fw-bold text-success">{{ balance|toman }} تومان</div>
+  <p class="text-muted small mt-2 mb-0">برای شارژ کیف پول با پشتیبانی فروشگاه تماس بگیرید.</p>
+</div>
+
+<div class="panel">
+  <h5 class="mb-3">تاریخچه تراکنش‌ها</h5>
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>نوع</th><th>مبلغ</th><th>موجودی پس از تراکنش</th><th>توضیحات</th><th>تاریخ</th></tr></thead>
+      <tbody>
+        {% for tx in transactions %}
+        <tr>
+          <td><span class="badge-soft">{{ t("wallet_tx_type", tx.tx_type) }}</span></td>
+          <td class="{{ 'text-success' if tx.amount > 0 else 'text-danger' }}">{{ "{:+,.0f}".format(tx.amount) }}</td>
+          <td>{{ tx.balance_after|toman }}</td>
+          <td class="text-muted">{{ tx.description or "-" }}</td>
+          <td>{{ tx.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">تراکنشی ثبت نشده است</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

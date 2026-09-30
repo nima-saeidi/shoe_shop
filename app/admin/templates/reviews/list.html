@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}نظرات محصولات{% endblock %}
+{% block page_title %}نظرات محصولات{% endblock %}
+{% block content %}
+<div class="panel">
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>محصول</th><th>کاربر</th><th>امتیاز</th><th>متن نظر</th><th>وضعیت</th><th></th></tr></thead>
+      <tbody>
+        {% for review in reviews %}
+        <tr>
+          <td>{{ review.product.name if review.product else "-" }}</td>
+          <td>{{ review.user.full_name if review.user else "-" }}</td>
+          <td>{{ "★" * review.rating }}{{ "☆" * (5 - review.rating) }}</td>
+          <td class="text-muted">{{ review.comment or "-" }}</td>
+          <td>
+            {% if review.is_approved %}
+            <span class="badge-status bg-success-subtle text-success">تایید شده</span>
+            {% else %}
+            <span class="badge-status bg-warning-subtle text-warning">در انتظار تایید</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            {% if not review.is_approved %}
+            <form action="/admin/reviews/{{ review.id }}/approve" method="post" class="d-inline">
+              <button class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg"></i></button>
+            </form>
+            {% else %}
+            <form action="/admin/reviews/{{ review.id }}/reject" method="post" class="d-inline">
+              <button class="btn btn-sm btn-outline-warning"><i class="bi bi-eye-slash"></i></button>
+            </form>
+            {% endif %}
+            <form action="/admin/reviews/{{ review.id }}/delete" method="post" class="d-inline" data-confirm="این نظر حذف شود؟">
+              <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">نظری ثبت نشده است</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

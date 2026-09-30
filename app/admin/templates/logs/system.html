@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}لاگ خام سرور{% endblock %}
+{% block page_title %}لاگ خام سرور (فنی){% endblock %}
+{% block content %}
+<div class="panel mb-3">
+  <div class="d-flex justify-content-between align-items-center">
+    <p class="text-muted small mb-0">
+      این بخش آخرین خطوط فایل لاگ فنی سرور (<code>logs/app.log</code>) را نشان می‌دهد — شامل خطاها و ترِیس‌بک‌های برنامه.
+      برای رویدادهای کسب‌وکاری (سفارش، پرداخت، ورود و ...) از <a href="/admin/logs">لاگ فعالیت‌ها</a> استفاده کنید.
+    </p>
+    <a href="/admin/logs/system" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-clockwise"></i> بروزرسانی</a>
+  </div>
+</div>
+<div class="panel">
+  <pre class="bg-dark text-light p-3 rounded-3 small" dir="ltr" style="max-height: 70vh; overflow-y: auto; white-space: pre-wrap;">{% for line in log_lines %}{{ line }}{% else %}(هنوز رویدادی ثبت نشده است){% endfor %}</pre>
+</div>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}کاربران{% endblock %}
+{% block page_title %}کاربران{% endblock %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="text-muted">{{ total }} کاربر</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>نام</th><th>ایمیل</th><th>موبایل</th><th>نقش</th><th>کیف پول</th><th>وضعیت</th><th></th></tr></thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td class="fw-semibold">
+            {{ user.full_name }}
+            {% if user.company_name %}<div class="small text-muted">{{ user.company_name }}</div>{% endif %}
+          </td>
+          <td dir="ltr" class="text-muted">{{ user.email }}</td>
+          <td dir="ltr">{{ user.phone_number or "-" }}</td>
+          <td>
+            <form action="/admin/users/{{ user.id }}/set-role" method="post" class="d-inline">
+              <select name="role" class="form-select form-select-sm d-inline w-auto" onchange="this.form.submit()">
+                {% for r in ["customer", "wholesale", "admin", "superadmin"] %}
+                <option value="{{ r }}" {% if user.role.value == r %}selected{% endif %}>{{ t("role", r) }}</option>
+                {% endfor %}
+              </select>
+            </form>
+          </td>
+          <td><a href="/admin/wallet/{{ user.id }}">{{ user.wallet_balance|toman }} تومان</a></td>
+          <td>
+            {% if user.is_active %}
+            <span class="badge-status bg-success-subtle text-success">فعال</span>
+            {% else %}
+            <span class="badge-status bg-secondary-subtle text-secondary">غیرفعال</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <form action="/admin/users/{{ user.id }}/toggle-active" method="post" class="d-inline">
+              <button class="btn btn-sm btn-outline-secondary">{{ "غیرفعال‌سازی" if user.is_active else "فعال‌سازی" }}</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" class="text-center text-muted py-4">کاربری ثبت نشده است</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

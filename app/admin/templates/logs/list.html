@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}لاگ‌های سیستم{% endblock %}
+{% block page_title %}لاگ فعالیت‌ها{% endblock %}
+{% block content %}
+<div class="panel mb-3">
+  <form class="row g-2 align-items-end" method="get">
+    <div class="col-md-2">
+      <label class="form-label small">دسته</label>
+      <select name="category" class="form-select form-select-sm">
+        <option value="">همه</option>
+        {% for c in categories %}
+        <option value="{{ c }}" {% if category_filter == c %}selected{% endif %}>{{ t("log_category", c) }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label small">سطح</label>
+      <select name="level" class="form-select form-select-sm">
+        <option value="">همه</option>
+        <option value="info" {% if level_filter == "info" %}selected{% endif %}>اطلاعات</option>
+        <option value="warning" {% if level_filter == "warning" %}selected{% endif %}>هشدار</option>
+        <option value="error" {% if level_filter == "error" %}selected{% endif %}>خطا</option>
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label small">جستجو در پیام</label>
+      <input type="text" name="q" value="{{ q }}" class="form-control form-control-sm" placeholder="جستجو...">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label small">از تاریخ</label>
+      <input type="datetime-local" name="date_from" value="{{ date_from }}" class="form-control form-control-sm">
+    </div>
+    <div class="col-md-2">
+      <label class="form-label small">تا تاریخ</label>
+      <input type="datetime-local" name="date_to" value="{{ date_to }}" class="form-control form-control-sm">
+    </div>
+    <div class="col-md-1">
+      <button class="btn btn-sm btn-brand w-100">فیلتر</button>
+    </div>
+  </form>
+</div>
+
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="text-muted">{{ total }} رویداد</span>
+    <a href="/admin/logs/system" class="btn btn-sm btn-outline-secondary"><i class="bi bi-file-text"></i> لاگ خام سرور</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-sm">
+      <thead><tr><th>زمان</th><th>سطح</th><th>دسته</th><th>پیام</th><th>انجام‌دهنده</th><th>IP</th></tr></thead>
+      <tbody>
+        {% for log in logs %}
+        <tr>
+          <td class="text-nowrap">{{ log.created_at.strftime("%Y-%m-%d %H:%M:%S") }}</td>
+          <td>
+            <span class="badge-status bg-{{ 'danger-subtle text-danger' if log.level.value == 'error' else ('warning-subtle text-warning' if log.level.value == 'warning' else 'light text-dark border') }}">
+              {{ t("log_level", log.level) }}
+            </span>
+          </td>
+          <td><span class="badge-soft">{{ t("log_category", log.category) }}</span></td>
+          <td>{{ log.message }}</td>
+          <td class="text-nowrap">{{ log.actor_label or (log.actor.full_name if log.actor else "سیستم") }}</td>
+          <td class="text-muted small" dir="ltr">{{ log.ip_address or "-" }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">رویدادی یافت نشد</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+</div>
+{% endblock %}

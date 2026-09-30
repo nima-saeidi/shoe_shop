@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}ثبت سفارش تلفنی/عمده{% endblock %}
+{% block page_title %}ثبت سفارش تلفنی/عمده{% endblock %}
+{% block content %}
+<div class="panel mb-3">
+  <p class="text-muted mb-3">
+    این فرم برای مواردی است که مشتری (معمولاً عمده‌فروش) تلفنی سفارش می‌دهد. پس از ثبت، یک
+    پیش‌فاکتور برای مشتری ایجاد می‌شود که می‌تواند از طریق کیف پول یا واریز بانکی تسویه کند.
+  </p>
+  <form class="d-flex gap-2" method="get">
+    <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="جستجوی مشتری با نام، ایمیل یا موبایل...">
+    <button class="btn btn-outline-secondary">جستجو</button>
+  </form>
+</div>
+
+<form method="post" action="/admin/orders/manual/new">
+  <div class="row g-3">
+    <div class="col-lg-6">
+      <div class="panel mb-3">
+        <h5 class="mb-3">انتخاب مشتری</h5>
+        {% if customers %}
+        <select name="user_id" class="form-select" required>
+          <option value="">— انتخاب کنید —</option>
+          {% for c in customers %}
+          <option value="{{ c.id }}">{{ c.full_name }} — {{ c.email }} {% if c.company_name %}({{ c.company_name }}){% endif %}</option>
+          {% endfor %}
+        </select>
+        {% else %}
+        <input type="number" name="user_id" class="form-control" placeholder="شناسه کاربر (پس از جستجو انتخاب کنید)" required>
+        <p class="text-muted small mt-2">ابتدا از کادر بالا مشتری را جستجو کنید.</p>
+        {% endif %}
+      </div>
+
+      <div class="panel">
+        <h5 class="mb-3">آدرس ارسال</h5>
+        <div class="mb-3">
+          <label class="form-label">نام تحویل‌گیرنده</label>
+          <input type="text" name="shipping_full_name" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">شماره تماس</label>
+          <input type="text" name="shipping_phone" class="form-control" dir="ltr" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">آدرس</label>
+          <textarea name="shipping_address" class="form-control" rows="2" required></textarea>
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">شهر</label>
+            <input type="text" name="shipping_city" class="form-control" required>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">کد پستی</label>
+            <input type="text" name="shipping_postal_code" class="form-control" dir="ltr" required>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">روش پرداخت</label>
+          <select name="payment_method" class="form-select">
+            <option value="bank_transfer">واریز بانکی / فیش</option>
+            <option value="wallet">کیف پول</option>
+            <option value="cod">پرداخت در محل</option>
+          </select>
+        </div>
+        <div class="mb-0">
+          <label class="form-label">توضیحات</label>
+          <textarea name="notes" class="form-control" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="panel">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0">اقلام سفارش</h5>
+          <button type="button" id="addRowBtn" class="btn btn-sm btn-outline-secondary"><i class="bi bi-plus-lg"></i> افزودن ردیف</button>
+        </div>
+        <div id="itemRows">
+          <div class="row g-2 mb-2 item-row">
+            <div class="col-8">
+              <select name="variant_ids" class="form-select form-select-sm" required>
+                <option value="">— انتخاب محصول / سایز / رنگ —</option>
+                {% for v in variants %}
+                <option value="{{ v.id }}">{{ v.product.name }} — سایز {{ v.size }} / {{ v.color }} (موجودی: {{ v.stock_quantity }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="col-4">
+              <input type="number" name="quantities" class="form-control form-control-sm" placeholder="تعداد" value="1" min="1" required>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-brand w-100 mt-3">ثبت سفارش و صدور پیش‌فاکتور</button>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.getElementById("addRowBtn").addEventListener("click", function () {
+  const rows = document.getElementById("itemRows");
+  const clone = rows.firstElementChild.cloneNode(true);
+  clone.querySelector("select").value = "";
+  clone.querySelector("input").value = "1";
+  rows.appendChild(clone);
+});
+</script>
+{% endblock %}

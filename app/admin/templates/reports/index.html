@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}گزارش‌های فروش{% endblock %}
+{% block page_title %}گزارش‌ها و آمار فروش{% endblock %}
+{% block content %}
+<div class="row g-3 mb-3">
+  <div class="col-md-6">
+    <div class="card-stat">
+      <div class="stat-icon bg-indigo"><i class="bi bi-shop"></i></div>
+      <div class="stat-value">{{ revenue_split.retail|toman }}</div>
+      <div class="stat-label">فروش خرد (تومان)</div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card-stat">
+      <div class="stat-icon bg-emerald"><i class="bi bi-boxes"></i></div>
+      <div class="stat-value">{{ revenue_split.wholesale|toman }}</div>
+      <div class="stat-label">فروش عمده (تومان)</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="panel mb-3">
+      <h5 class="mb-3">فروش روزانه (پرداخت‌شده)</h5>
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>تاریخ</th><th>تعداد سفارش</th><th>مبلغ فروش</th></tr></thead>
+          <tbody>
+            {% for row in sales %}
+            <tr><td>{{ row.day }}</td><td>{{ row.orders }}</td><td>{{ row.revenue|toman }}</td></tr>
+            {% else %}
+            <tr><td colspan="3" class="text-center text-muted py-3">داده‌ای موجود نیست</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h5 class="mb-3">هشدار کمبود موجودی</h5>
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>محصول</th><th>سایز</th><th>رنگ</th><th>موجودی</th></tr></thead>
+          <tbody>
+            {% for v in low_stock %}
+            <tr>
+              <td><a href="/admin/products/{{ v.product_id }}/edit">{{ v.product.name if v.product else "-" }}</a></td>
+              <td>{{ v.size }}</td>
+              <td>{{ v.color }}</td>
+              <td class="{{ 'text-danger fw-bold' if v.stock_quantity == 0 else 'text-warning' }}">{{ v.stock_quantity }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="text-center text-muted py-3">موجودی همه محصولات کافی است</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="panel mb-3">
+      <h5 class="mb-3">پرفروش‌ترین محصولات</h5>
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>محصول</th><th>تعداد فروش</th></tr></thead>
+          <tbody>
+            {% for row in top_products %}
+            <tr><td>{{ row.name }}</td><td>{{ row.qty }}</td></tr>
+            {% else %}
+            <tr><td colspan="2" class="text-center text-muted py-3">داده‌ای موجود نیست</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h5 class="mb-3">پرفروش‌ترین سایزها</h5>
+      <div class="table-responsive">
+        <table class="table table-sm">
+          <thead><tr><th>سایز</th><th>تعداد فروش</th></tr></thead>
+          <tbody>
+            {% for row in top_sizes %}
+            <tr><td>{{ row.size }}</td><td>{{ row.qty }}</td></tr>
+            {% else %}
+            <tr><td colspan="2" class="text-center text-muted py-3">داده‌ای موجود نیست</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

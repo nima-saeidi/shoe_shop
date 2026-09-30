@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}درخواست‌های همکاری عمده{% endblock %}
+{% block page_title %}درخواست‌های همکاری عمده{% endblock %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <form class="d-flex gap-2" method="get">
+      <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+        <option value="pending" {% if status_filter == "pending" %}selected{% endif %}>در انتظار بررسی</option>
+        <option value="approved" {% if status_filter == "approved" %}selected{% endif %}>تایید شده</option>
+        <option value="rejected" {% if status_filter == "rejected" %}selected{% endif %}>رد شده</option>
+        <option value="all" {% if status_filter == "all" %}selected{% endif %}>همه</option>
+      </select>
+    </form>
+    <span class="text-muted">{{ requests|length }} درخواست</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>نام</th><th>ایمیل</th><th>موبایل</th><th>نام شرکت/فروشگاه</th><th>وضعیت</th><th></th></tr></thead>
+      <tbody>
+        {% for user in requests %}
+        <tr>
+          <td class="fw-semibold">{{ user.full_name }}</td>
+          <td dir="ltr" class="text-muted">{{ user.email }}</td>
+          <td dir="ltr">{{ user.phone_number or "-" }}</td>
+          <td>{{ user.company_name or "-" }}</td>
+          <td>
+            <span class="badge-status bg-{{ 'warning-subtle text-warning' if user.wholesale_status.value == 'pending' else ('success-subtle text-success' if user.wholesale_status.value == 'approved' else 'secondary-subtle text-secondary') }}">
+              {{ t("wholesale_status", user.wholesale_status) }}
+            </span>
+          </td>
+          <td class="text-end">
+            {% if user.wholesale_status.value == "pending" %}
+            <form action="/admin/wholesale/{{ user.id }}/approve" method="post" class="d-inline">
+              <button class="btn btn-sm btn-outline-success"><i class="bi bi-check-lg"></i> تایید</button>
+            </form>
+            <form action="/admin/wholesale/{{ user.id }}/reject" method="post" class="d-inline">
+              <button class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i> رد</button>
+            </form>
+            {% else %}
+            <a href="/admin/wallet/{{ user.id }}" class="btn btn-sm btn-outline-secondary">کیف پول</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" class="text-center text-muted py-4">درخواستی یافت نشد</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

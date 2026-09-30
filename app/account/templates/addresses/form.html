@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ "ویرایش آدرس" if address else "آدرس جدید" }}{% endblock %}
+{% block page_title %}{{ "ویرایش آدرس" if address else "آدرس جدید" }}{% endblock %}
+{% block content %}
+<div class="panel" style="max-width: 640px;">
+  <form method="post" action="{{ '/account/addresses/' ~ address.id ~ '/edit' if address else '/account/addresses/new' }}">
+    <div class="mb-3">
+      <label class="form-label">نام تحویل‌گیرنده</label>
+      <input type="text" name="full_name" class="form-control" value="{{ address.full_name if address else '' }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">شماره موبایل</label>
+      <input type="text" name="phone_number" class="form-control" dir="ltr" value="{{ address.phone_number if address else '' }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">شهر</label>
+      <input type="text" name="city" class="form-control" value="{{ address.city if address else '' }}" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">آدرس دقیق</label>
+      <textarea name="address_line" class="form-control" rows="3" required>{{ address.address_line if address else '' }}</textarea>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">کد پستی</label>
+      <input type="text" name="postal_code" class="form-control" dir="ltr" value="{{ address.postal_code if address else '' }}" required>
+    </div>
+    <div class="form-check form-switch mb-3">
+      <input class="form-check-input" type="checkbox" name="is_default" value="true" id="isDefault" {% if address and address.is_default %}checked{% endif %}>
+      <label class="form-check-label" for="isDefault">تنظیم به‌عنوان آدرس پیش‌فرض</label>
+    </div>
+    <button type="submit" class="btn btn-brand">ذخیره</button>
+    <a href="/account/addresses" class="btn btn-light">انصراف</a>
+  </form>
+</div>
+{% endblock %}

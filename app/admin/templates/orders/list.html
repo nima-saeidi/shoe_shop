@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}سفارش‌ها{% endblock %}
+{% block page_title %}سفارش‌ها{% endblock %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <form class="d-flex gap-2" method="get">
+      <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+        <option value="">همه وضعیت‌ها</option>
+        {% for s in status_options %}
+        <option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ t("order_status", s) }}</option>
+        {% endfor %}
+      </select>
+      <select name="order_type" class="form-select form-select-sm" onchange="this.form.submit()">
+        <option value="">خرد و عمده</option>
+        <option value="retail" {% if order_type_filter == "retail" %}selected{% endif %}>فقط خرد</option>
+        <option value="wholesale" {% if order_type_filter == "wholesale" %}selected{% endif %}>فقط عمده</option>
+      </select>
+    </form>
+    <div class="d-flex align-items-center gap-3">
+      <a href="/admin/orders/manual/new" class="btn btn-brand btn-sm"><i class="bi bi-plus-lg"></i> ثبت سفارش تلفنی</a>
+      <span class="text-muted">{{ total }} سفارش</span>
+    </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>شماره سفارش</th><th>مشتری</th><th>نوع</th><th>مبلغ</th><th>پرداخت</th><th>وضعیت</th><th>تاریخ</th><th></th></tr></thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td class="fw-semibold">
+            {{ order.order_number }}
+            {% if order.is_manual %}<span class="badge-soft">ثبت دستی</span>{% endif %}
+          </td>
+          <td>{{ order.shipping_full_name }}</td>
+          <td>
+            {% if order.order_type.value == "wholesale" %}
+            <span class="badge-status bg-indigo text-white">عمده</span>
+            {% else %}
+            <span class="badge-status bg-light text-dark border">خرد</span>
+            {% endif %}
+          </td>
+          <td>{{ order.grand_total|toman }}</td>
+          <td><span class="badge-status bg-light text-dark border">{{ t("payment_status", order.payment_status) }}</span></td>
+          <td><span class="badge-status bg-indigo text-white">{{ t("order_status", order.status) }}</span></td>
+          <td>{{ order.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+          <td class="text-end"><a href="/admin/orders/{{ order.id }}" class="btn btn-sm btn-outline-secondary">مشاهده</a></td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8" class="text-center text-muted py-4">سفارشی یافت نشد</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "partials/pagination.html" %}
+</div>
+{% endblock %}

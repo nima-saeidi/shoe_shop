@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}کیف پول {{ wallet_user.full_name }}{% endblock %}
+{% block page_title %}کیف پول — {{ wallet_user.full_name }}{% endblock %}
+{% block content %}
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="panel">
+      <h5 class="mb-3">تراکنش‌ها</h5>
+      <div class="table-responsive">
+        <table class="table">
+          <thead><tr><th>نوع</th><th>مبلغ</th><th>موجودی پس از تراکنش</th><th>توضیحات</th><th>تاریخ</th></tr></thead>
+          <tbody>
+            {% for tx in transactions %}
+            <tr>
+              <td><span class="badge-soft">{{ t("wallet_tx_type", tx.tx_type) }}</span></td>
+              <td class="{{ 'text-success' if tx.amount > 0 else 'text-danger' }}">{{ "{:+,.0f}".format(tx.amount) }}</td>
+              <td>{{ tx.balance_after|toman }}</td>
+              <td class="text-muted">{{ tx.description or "-" }}</td>
+              <td>{{ tx.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center text-muted py-4">تراکنشی ثبت نشده است</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="panel mb-3 text-center">
+      <div class="text-muted small mb-1">موجودی فعلی</div>
+      <div class="fs-3 fw-bold text-primary">{{ wallet_user.wallet_balance|toman }} تومان</div>
+    </div>
+    <div class="panel">
+      <h5 class="mb-3">شارژ کیف پول</h5>
+      <form method="post" action="/admin/wallet/{{ wallet_user.id }}/topup">
+        <div class="mb-3">
+          <label class="form-label">مبلغ (تومان)</label>
+          <input type="number" name="amount" class="form-control" required min="1">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">توضیحات</label>
+          <input type="text" name="description" class="form-control" placeholder="مثلاً: واریز نقدی به حساب فروشگاه">
+        </div>
+        <button class="btn btn-brand w-100">ثبت شارژ</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

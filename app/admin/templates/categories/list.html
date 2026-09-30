@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}دسته‌بندی‌ها{% endblock %}
+{% block page_title %}دسته‌بندی‌ها{% endblock %}
+{% block content %}
+<div class="panel">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <span class="text-muted">{{ total }} دسته‌بندی</span>
+    <a href="/admin/categories/new" class="btn btn-brand btn-sm"><i class="bi bi-plus-lg"></i> دسته‌بندی جدید</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table">
+      <thead><tr><th>نام</th><th>اسلاگ</th><th>والد</th><th>وضعیت</th><th></th></tr></thead>
+      <tbody>
+        {% for category in categories %}
+        <tr>
+          <td class="fw-semibold">{{ category.name }}</td>
+          <td class="text-muted" dir="ltr">{{ category.slug }}</td>
+          <td>{{ category.parent.name if category.parent else "-" }}</td>
+          <td>
+            {% if category.is_active %}
+            <span class="badge-status bg-success-subtle text-success">فعال</span>
+            {% else %}
+            <span class="badge-status bg-secondary-subtle text-secondary">غیرفعال</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <a href="/admin/categories/{{ category.id }}/edit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+            <form action="/admin/categories/{{ category.id }}/delete" method="post" class="d-inline" data-confirm="این دسته‌بندی حذف شود؟">
+              <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5" class="text-center text-muted py-4">دسته‌بندی‌ای ثبت نشده است</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
