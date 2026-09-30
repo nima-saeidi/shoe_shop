@@ -1,4 +1,5 @@
 from sqlalchemy import func, select
+from sqlalchemy.orm import selectinload
 
 from app.models.review import Review
 from app.repositories.base import BaseRepository
@@ -22,6 +23,21 @@ class ReviewRepository(BaseRepository[Review]):
         )
         result = await self.db.execute(stmt)
         return result.scalars().all()
+
+    async def list_all(self, offset: int = 0, limit: int = 20):
+        stmt = (
+            select(Review)
+            .options(selectinload(Review.product), selectinload(Review.user))
+            .order_by(Review.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
+
+    async def count_all(self) -> int:
+        result = await self.db.execute(select(func.count()).select_from(Review))
+        return result.scalar_one()
 
     async def average_rating(self, product_id: int) -> float:
         stmt = select(func.coalesce(func.avg(Review.rating), 0)).where(

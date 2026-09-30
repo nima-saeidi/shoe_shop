@@ -24,3 +24,10 @@ class WalletTransactionOut(BaseModel):
 
 class WalletBalanceOut(BaseModel):
     balance: float
+
+
+class WalletDetailOut(BaseModel):
+    user_id: int
+    full_name: str
+    balance: float
+    transactions: list[WalletTransactionOut]

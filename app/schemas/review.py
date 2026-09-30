@@ -15,7 +15,13 @@ class ReviewOut(BaseModel):
     id: int
     product_id: int
     user_id: int
+    product_name: Optional[str] = None
+    customer_name: Optional[str] = None
     rating: int
     comment: Optional[str] = None
     is_approved: bool
     created_at: datetime
+
+
+class ReviewModerate(BaseModel):
+    is_approved: bool

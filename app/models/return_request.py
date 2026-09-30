@@ -43,3 +43,23 @@ class ReturnRequest(TimestampMixin, Base):
     order: Mapped["Order"] = relationship()
     order_item: Mapped["OrderItem"] = relationship()
     user: Mapped["User"] = relationship()
+
+    @property
+    def order_number(self) -> str | None:
+        return self.order.order_number if self.order else None
+
+    @property
+    def product_name(self) -> str | None:
+        return self.order_item.product_name if self.order_item else None
+
+    @property
+    def size(self) -> str | None:
+        return self.order_item.size if self.order_item else None
+
+    @property
+    def color(self) -> str | None:
+        return self.order_item.color if self.order_item else None
+
+    @property
+    def customer_name(self) -> str | None:
+        return self.user.full_name if self.user else None

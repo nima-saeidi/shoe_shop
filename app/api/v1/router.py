@@ -2,6 +2,15 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     addresses,
+    admin_dashboard,
+    admin_logs,
+    admin_orders,
+    admin_products,
+    admin_reports,
+    admin_reviews,
+    admin_settings,
+    admin_tickets,
+    admin_users,
     auth,
     brands,
     cart,
@@ -33,3 +42,16 @@ api_router.include_router(wholesale.router, prefix="/wholesale", tags=["Wholesal
 api_router.include_router(wallet.router, prefix="/wallet", tags=["Wallet"])
 api_router.include_router(returns.router, prefix="/returns", tags=["Returns"])
 api_router.include_router(tickets.router, prefix="/tickets", tags=["Support Tickets"])
+
+# Admin-only JSON endpoints, consumed by the React admin panel. Hidden from the
+# public Swagger schema (see each router's include_in_schema=False) since they're
+# not part of the customer/site-facing API surface.
+api_router.include_router(admin_dashboard.router, prefix="/admin/dashboard", tags=["Admin"])
+api_router.include_router(admin_reports.router, prefix="/admin/reports", tags=["Admin"])
+api_router.include_router(admin_logs.router, prefix="/admin/logs", tags=["Admin"])
+api_router.include_router(admin_settings.router, prefix="/admin/settings", tags=["Admin"])
+api_router.include_router(admin_users.router, prefix="/admin/users", tags=["Admin"])
+api_router.include_router(admin_products.router, prefix="/admin/products", tags=["Admin"])
+api_router.include_router(admin_orders.router, prefix="/admin/orders", tags=["Admin"])
+api_router.include_router(admin_reviews.router, prefix="/admin/reviews", tags=["Admin"])
+api_router.include_router(admin_tickets.router, prefix="/admin/tickets", tags=["Admin"])

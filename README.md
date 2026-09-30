@@ -37,6 +37,14 @@ API / Admin routers  →  Services (business logic)  →  Repositories (data acc
 - Support ticket thread (create/reply)
 - Wholesale ("عمده") upgrade request + status
 
+**Admin Panel — React SPA (`admin-frontend/`, separate project)**
+A second, independent way to manage the same backend: a proper engineered React app
+(Vite + TypeScript + Ant Design + TanStack Query + Zustand + Axios) covering the same
+feature set as the Jinja2 admin panel above, authenticated via the same JWT endpoints as
+the public API. See `admin-frontend/README.md` for its architecture and setup — the two
+admin panels are fully independent and either (or both) can be used; nothing was removed
+from the Jinja2 one.
+
 ## Logging & audit trail
 
 Two independent log surfaces, both readable from the admin panel (`/admin/logs`):
@@ -60,10 +68,13 @@ changes) are logged at `warning` level so they stand out when filtering by level
 Only the customer/site-facing JSON API (`/api/v1/...`) is listed in the OpenAPI schema —
 registration, login, browsing products/categories/brands, cart, checkout, order history, wallet
 balance, returns, tickets, wholesale request, etc. Admin-only JSON endpoints (product/category/brand
-management, order status updates, coupon CRUD, wallet top-up, wholesale approval, ...) still work
-exactly as before, they're just marked `include_in_schema=False` so they don't clutter the public
-docs — the admin panel doesn't call them anyway (it talks to the service layer directly). The
-`/admin` and `/account` routers are entirely HTML, not JSON, and are excluded from the schema too.
+management, order status updates, coupon CRUD, wallet top-up, wholesale approval, the `/admin/...`
+dashboard/reports/logs/settings/users endpoints the **React admin panel** consumes, ...) all work
+normally, they're just marked `include_in_schema=False` so they don't clutter the public docs — the
+Jinja2 admin panel doesn't call them at all (it talks to the service layer directly in-process), but
+the separate `admin-frontend/` React app does call them, over HTTP with a JWT, exactly like any other
+API client. The `/admin` and `/account` routers (Jinja2, server-rendered HTML) are excluded from the
+schema too since they're not JSON.
 
 ## Architecture
 

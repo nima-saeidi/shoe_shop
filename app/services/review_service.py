@@ -18,6 +18,11 @@ class ReviewService:
     async def list_for_product(self, product_id: int, offset: int = 0, limit: int = 20):
         return await self.repo.list_for_product(product_id, offset, limit)
 
+    async def list_all(self, offset: int = 0, limit: int = 20):
+        items = await self.repo.list_all(offset, limit)
+        total = await self.repo.count_all()
+        return items, total
+
     async def create_review(self, product_id: int, user_id: int, data: ReviewCreate) -> Review:
         product = await self.product_repo.get(product_id)
         if not product:

@@ -28,3 +28,8 @@ class ReturnRequestOut(BaseModel):
     status: ReturnStatus
     admin_note: Optional[str] = None
     created_at: datetime
+    order_number: Optional[str] = None
+    product_name: Optional[str] = None
+    size: Optional[str] = None
+    color: Optional[str] = None
+    customer_name: Optional[str] = None

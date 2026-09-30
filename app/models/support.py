@@ -30,6 +30,10 @@ class SupportTicket(TimestampMixin, Base):
         back_populates="ticket", cascade="all, delete-orphan", order_by="TicketMessage.created_at"
     )
 
+    @property
+    def customer_name(self) -> str | None:
+        return self.user.full_name if self.user else None
+
 
 class TicketMessage(TimestampMixin, Base):
     __tablename__ = "ticket_messages"
@@ -42,3 +46,7 @@ class TicketMessage(TimestampMixin, Base):
 
     ticket: Mapped["SupportTicket"] = relationship(back_populates="messages")
     sender: Mapped["User"] = relationship()
+
+    @property
+    def sender_name(self) -> str | None:
+        return self.sender.full_name if self.sender else None

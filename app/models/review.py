@@ -24,3 +24,11 @@ class Review(TimestampMixin, Base):
 
     product: Mapped["Product"] = relationship(back_populates="reviews")
     user: Mapped["User"] = relationship(back_populates="reviews")
+
+    @property
+    def product_name(self) -> str | None:
+        return self.product.name if self.product else None
+
+    @property
+    def customer_name(self) -> str | None:
+        return self.user.full_name if self.user else None

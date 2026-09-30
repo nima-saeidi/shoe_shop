@@ -34,6 +34,8 @@ class OrderOut(BaseModel):
 
     id: int
     order_number: str
+    user_id: int
+    is_manual: bool
     order_type: OrderType
     status: OrderStatus
     payment_status: PaymentStatus

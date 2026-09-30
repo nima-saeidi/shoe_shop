@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -20,6 +20,7 @@ class TicketMessageOut(BaseModel):
 
     id: int
     sender_id: int
+    sender_name: Optional[str] = None
     is_admin: bool
     message: str
     created_at: datetime
@@ -32,4 +33,6 @@ class TicketOut(BaseModel):
     subject: str
     status: TicketStatus
     created_at: datetime
+    updated_at: datetime
+    customer_name: Optional[str] = None
     messages: List[TicketMessageOut] = []
