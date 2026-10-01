@@ -2,7 +2,7 @@
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --fetch-timeout=300000 --fetch-retries=5
 
 # ---- build ----
 FROM node:22-alpine AS build

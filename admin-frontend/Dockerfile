@@ -2,7 +2,7 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --fetch-timeout=300000 --fetch-retries=5
 COPY . .
 # Relative by default: the container's nginx proxies /api to the backend (same origin, no CORS).
 ARG VITE_API_BASE_URL=/api/v1
