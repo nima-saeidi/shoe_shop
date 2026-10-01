@@ -78,7 +78,7 @@ export default function AddressesPage() {
             <textarea id="address_line" name="address_line" className="input" rows={3} required maxLength={500} defaultValue={current?.address_line} />
           </div>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="is_default" defaultChecked={current?.is_default} className="accent-[#c9737f]" /> آدرس پیش‌فرض
+            <input type="checkbox" name="is_default" defaultChecked={current?.is_default} className="accent-[#8a2b45]" /> آدرس پیش‌فرض
           </label>
           <div className="flex gap-3">
             <button type="submit" disabled={busy} className="btn btn-primary">ذخیره</button>

@@ -126,8 +126,8 @@ export function CheckoutForm() {
             ['cod', 'پرداخت در محل'],
             ['wallet', `کیف پول (موجودی: ${formatToman(user?.wallet_balance ?? 0)})`],
           ] as const).map(([value, label]) => (
-            <label key={value} className="flex cursor-pointer items-center gap-3 rounded-xl border border-blush-deep p-3 has-[:checked]:border-brand has-[:checked]:bg-blush">
-              <input type="radio" name="payment" checked={payment === value} onChange={() => setPayment(value)} className="accent-[#c9737f]" />
+            <label key={value} className="flex cursor-pointer items-center gap-3 rounded-xl border border-line p-3 has-[:checked]:border-brand has-[:checked]:bg-blush">
+              <input type="radio" name="payment" checked={payment === value} onChange={() => setPayment(value)} className="accent-[#8a2b45]" />
               <span className="text-sm">{label}</span>
             </label>
           ))}
@@ -152,7 +152,7 @@ export function CheckoutForm() {
             </li>
           ))}
         </ul>
-        <div className="flex justify-between border-t border-blush-deep pt-4 font-semibold">
+        <div className="flex justify-between border-t border-line pt-4 font-semibold">
           <span>جمع کل</span>
           <span>{formatToman(cart.subtotal)}</span>
         </div>

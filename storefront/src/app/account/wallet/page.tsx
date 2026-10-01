@@ -29,7 +29,7 @@ export default function WalletPage() {
       {balance === null && !error && <Spinner />}
       {balance !== null && (
         <>
-          <div className="card bg-gradient-to-l from-[#f3d6d2] to-white p-6">
+          <div className="card bg-gradient-to-l from-[#efe4e8] to-white p-6">
             <p className="text-sm text-muted">موجودی فعلی</p>
             <p className="mt-2 text-3xl font-extrabold">{formatToman(balance)}</p>
             <p className="mt-3 text-xs text-muted">برای شارژ کیف پول با پشتیبانی تماس بگیرید.</p>
@@ -37,7 +37,7 @@ export default function WalletPage() {
           <section className="card p-5">
             <h2 className="mb-3 font-bold">تراکنش‌ها</h2>
             {txs && txs.length > 0 ? (
-              <ul className="divide-y divide-blush-deep text-sm">
+              <ul className="divide-y divide-line text-sm">
                 {txs.map((t) => (
                   <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
                     <div>

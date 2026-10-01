@@ -19,7 +19,7 @@ const VALUES = [
 export default function AboutPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-8">
-      <header className="card bg-gradient-to-l from-[#f3d6d2] to-[#f9ece9] p-8 text-center">
+      <header className="card bg-gradient-to-l from-[#efe4e8] to-white p-8 text-center">
         <h1 className="text-3xl font-extrabold">درباره پانیک</h1>
         <p className="mt-3 text-ink/80">تولیدی کفش تبریز؛ زیبایی در هر قدم</p>
       </header>

@@ -21,11 +21,11 @@ export function SearchBox({ className = '' }: { className?: string }) {
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder="جستجوی محصولات..."
+          placeholder="جستجوی محصولات، دسته‌بندی‌ها..."
           aria-label="جستجوی محصولات"
-          className="w-full rounded-full bg-white py-2 pe-4 ps-10 text-sm shadow-soft outline-none placeholder:text-muted/70 focus:ring-2 focus:ring-brand/30 md:w-56 md:bg-blush md:shadow-none"
+          className="w-full rounded-lg border border-line bg-blush py-2.5 pe-4 ps-11 text-sm outline-none transition placeholder:text-muted/70 focus:border-brand focus:bg-white focus:ring-2 focus:ring-brand/15"
         />
-        <button type="submit" aria-label="جستجو" className="absolute inset-y-0 start-3 text-muted">
+        <button type="submit" aria-label="جستجو" className="absolute inset-y-0 start-3 text-muted hover:text-brand">
           <SearchIcon width={18} height={18} />
         </button>
       </div>

@@ -19,14 +19,14 @@ export default async function OpengraphImage() {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'linear-gradient(135deg, #f3d6d2, #fbf1ee)',
+          background: 'linear-gradient(135deg, #0f1a30, #5a1a2d)',
           fontFamily: 'Vazirmatn',
-          color: '#1d2a44',
+          color: '#ffffff',
         }}
       >
         <div style={{ fontSize: 120, fontWeight: 700, letterSpacing: 6, display: 'flex' }}>PANIK</div>
         <div style={{ fontSize: 54, marginTop: 8, display: 'flex' }}>تولیدی کفش تبریز</div>
-        <div style={{ fontSize: 34, marginTop: 28, color: '#a95562', display: 'flex' }}>زیبایی در هر قدم</div>
+        <div style={{ fontSize: 34, marginTop: 28, color: 'rgba(255,255,255,0.75)', display: 'flex' }}>زیبایی در هر قدم</div>
       </div>
     ),
     { ...size, fonts: [{ name: 'Vazirmatn', data: font, weight: 700, style: 'normal' }] },

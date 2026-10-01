@@ -52,7 +52,7 @@ export default function TicketDetailPage() {
       <ul className="space-y-3">
         {ticket.messages.map((m) => (
           <li key={m.id} className={`flex ${m.is_admin ? 'justify-start' : 'justify-end'}`}>
-            <div className={`max-w-[85%] rounded-2xl p-4 text-sm leading-7 shadow-soft ${m.is_admin ? 'bg-blush-deep' : 'bg-white'}`}>
+            <div className={`max-w-[85%] rounded-xl p-4 text-sm leading-7 shadow-soft ${m.is_admin ? 'bg-blush-deep' : 'bg-white'}`}>
               <p className="mb-1 text-xs font-semibold text-brand-dark">{m.is_admin ? 'پشتیبانی' : 'شما'}</p>
               <p className="whitespace-pre-line">{m.message}</p>
               <p className="mt-2 text-[11px] text-muted">{formatDateTime(m.created_at)}</p>

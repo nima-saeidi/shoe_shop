@@ -15,8 +15,8 @@ export function ProductCard({ product, priority = false }: { product: Product; p
   const inStock = product.variants.some((v) => v.stock_quantity > 0)
 
   return (
-    <article className="card group flex flex-col overflow-hidden p-2.5 transition hover:-translate-y-0.5">
-      <Link href={`/products/${slugPath(product.slug)}`} className="relative block aspect-square overflow-hidden rounded-2xl bg-blush">
+    <article className="card group flex flex-col overflow-hidden p-2.5 transition hover:border-brand/40 hover:shadow-md">
+      <Link href={`/products/${slugPath(product.slug)}`} className="relative block aspect-square overflow-hidden rounded-xl bg-blush">
         {src ? (
           <Image
             src={src}

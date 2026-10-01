@@ -118,7 +118,7 @@ export default async function ProductPage({ params }: { params: Params }) {
       {ratingCount > 0 && (
         <section aria-labelledby="reviews" className="card p-6">
           <h2 id="reviews" className="mb-4 text-xl font-bold">نظرات مشتریان</h2>
-          <ul className="divide-y divide-blush-deep">
+          <ul className="divide-y divide-line">
             {reviews.map((r) => (
               <li key={r.id} className="py-3 text-sm">
                 <p className="flex items-center justify-between">

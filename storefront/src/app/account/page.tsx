@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { ACCOUNT_ITEMS } from '@/components/account/AccountNav'
 import { ProfileCompletion } from '@/components/account/ProfileCompletion'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { orderApi } from '@/lib/api/account'
@@ -39,11 +40,34 @@ export default function AccountDashboard() {
           <p className="text-sm text-muted">تعداد سفارش‌ها</p>
           <p className="mt-2 text-lg font-bold">{total.toLocaleString('fa-IR')}</p>
         </div>
-        <Link href="/cart" className="card p-5 transition hover:-translate-y-0.5">
+        <Link href="/cart" className="card p-5 transition hover:border-brand/50">
           <p className="text-sm text-muted">سبد خرید</p>
           <p className="mt-2 text-lg font-bold">{cartCount.toLocaleString('fa-IR')} کالا</p>
         </Link>
       </div>
+
+      <section aria-label="دسترسی سریع">
+        <h2 className="mb-3 font-bold">دسترسی سریع</h2>
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+          {[
+            { href: '/account/orders', label: 'مشاهده سفارش‌ها' },
+            { href: '/account/tickets', label: 'ارسال تیکت' },
+            { href: '/account/returns', label: 'درخواست مرجوعی' },
+            { href: '/account/addresses', label: 'مدیریت آدرس‌ها' },
+            { href: '/account/wallet', label: 'کیف پول' },
+            { href: '/account/profile', label: 'ویرایش پروفایل' },
+          ].map((a) => (
+            <li key={a.href}>
+              <Link href={a.href} className="card flex h-full flex-col items-center gap-2 p-4 text-center text-sm transition hover:border-brand/50 hover:text-brand">
+                <span aria-hidden="true" className="flex h-10 w-10 items-center justify-center rounded-lg bg-blush-deep text-lg text-brand">
+                  {ACCOUNT_ITEMS.find((i) => i.href === a.href)?.icon}
+                </span>
+                {a.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <section className="card p-5">
         <div className="mb-3 flex items-center justify-between">
@@ -55,7 +79,7 @@ export default function AccountDashboard() {
         ) : orders.length === 0 ? (
           <p className="text-sm text-muted">هنوز سفارشی ثبت نکرده‌اید. <Link href="/products" className="text-brand-dark">شروع خرید</Link></p>
         ) : (
-          <ul className="divide-y divide-blush-deep">
+          <ul className="divide-y divide-line">
             {orders.map((o) => (
               <li key={o.id}>
                 <Link href={`/account/orders/${o.id}`} className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm">

@@ -69,7 +69,7 @@ export default function TicketsPage() {
         <ul className="space-y-3">
           {tickets.map((t) => (
             <li key={t.id}>
-              <Link href={`/account/tickets/${t.id}`} className="card flex flex-wrap items-center justify-between gap-3 p-4 transition hover:-translate-y-0.5">
+              <Link href={`/account/tickets/${t.id}`} className="card flex flex-wrap items-center justify-between gap-3 p-4 transition hover:border-brand/50">
                 <div>
                   <p className="font-semibold">{t.subject}</p>
                   <p className="text-xs text-muted">آخرین به‌روزرسانی: {formatDateTime(t.updated_at)}</p>

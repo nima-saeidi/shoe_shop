@@ -35,7 +35,7 @@ export default function OrdersPage() {
           <ul className="space-y-3">
             {data.items.map((o) => (
               <li key={o.id}>
-                <Link href={`/account/orders/${o.id}`} className="card flex flex-wrap items-center justify-between gap-3 p-4 transition hover:-translate-y-0.5">
+                <Link href={`/account/orders/${o.id}`} className="card flex flex-wrap items-center justify-between gap-3 p-4 transition hover:border-brand/50">
                   <div>
                     <p className="font-semibold" dir="ltr">{o.order_number}</p>
                     <p className="text-xs text-muted">{formatDate(o.created_at)} · {o.items.length.toLocaleString('fa-IR')} قلم</p>

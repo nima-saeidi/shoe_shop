@@ -17,19 +17,22 @@ export function isActive(pathname: string, href: string) {
 export function NavLinks() {
   const pathname = usePathname()
   return (
-    <nav aria-label="منوی اصلی" className="mx-auto hidden items-center gap-1 lg:flex">
-      {NAV_ITEMS.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          aria-current={isActive(pathname, item.href) ? 'page' : undefined}
-          className={`rounded-full px-4 py-1.5 text-sm transition ${
-            isActive(pathname, item.href) ? 'bg-blush-deep font-semibold text-brand-dark' : 'hover:bg-blush'
-          }`}
-        >
-          {item.label}
-        </Link>
-      ))}
+    <nav aria-label="منوی اصلی" className="flex items-center gap-1">
+      {NAV_ITEMS.map((item) => {
+        const active = isActive(pathname, item.href)
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-current={active ? 'page' : undefined}
+            className={`-mb-px border-b-2 px-4 py-3 text-sm transition ${
+              active ? 'border-brand font-semibold text-brand' : 'border-transparent text-ink/80 hover:text-brand'
+            }`}
+          >
+            {item.label}
+          </Link>
+        )
+      })}
     </nav>
   )
 }

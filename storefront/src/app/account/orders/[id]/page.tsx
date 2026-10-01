@@ -79,7 +79,7 @@ export default function OrderDetailPage() {
               <th className="pb-2 text-start font-medium">جمع</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-blush-deep">
+          <tbody className="divide-y divide-line">
             {order.items.map((i) => (
               <tr key={i.id}>
                 <td className="py-3">{i.product_name}<span className="block text-xs text-muted">سایز {i.size} · {i.color}</span></td>
@@ -90,7 +90,7 @@ export default function OrderDetailPage() {
             ))}
           </tbody>
         </table>
-        <dl className="mt-4 ms-auto max-w-xs space-y-1.5 border-t border-blush-deep pt-4 text-sm">
+        <dl className="mt-4 ms-auto max-w-xs space-y-1.5 border-t border-line pt-4 text-sm">
           <div className="flex justify-between"><dt className="text-muted">جمع کالاها</dt><dd>{formatToman(order.subtotal)}</dd></div>
           {order.discount_total > 0 && <div className="flex justify-between"><dt className="text-muted">تخفیف</dt><dd>−{formatToman(order.discount_total)}</dd></div>}
           <div className="flex justify-between"><dt className="text-muted">هزینه ارسال</dt><dd>{formatToman(order.shipping_cost)}</dd></div>

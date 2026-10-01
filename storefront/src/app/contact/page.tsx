@@ -14,7 +14,7 @@ export default function ContactPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <h1 className="text-2xl font-bold">ارتباط با ما</h1>
       <div className="card space-y-5 p-6 leading-8">
-        <p>برای پیگیری سفارش، مشاوره و خرید عمده از راه‌های زیر با ما در ارتباط باشید. پشتیبانی هر روز از ۹ صبح تا ۹ شب پاسخ‌گوی شماست.</p>
+        <p>برای پیگیری سفارش، مشاوره و خرید عمده از راه‌های زیر با ما در ارتباط باشید.</p>
         <address className="space-y-2 not-italic">
           <p><span className="text-muted">آدرس: </span>تبریز، بازار کفش</p>
           <p><span className="text-muted">تلفن: </span><a href="tel:+984133000000" dir="ltr" className="text-brand-dark">۰۴۱-۳۳۰۰۰۰۰۰</a></p>

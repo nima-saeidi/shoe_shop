@@ -57,7 +57,7 @@ export function CartView() {
             const src = mediaUrl(item.image_url)
             return (
               <li key={item.id} className="card flex gap-4 p-3">
-                <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-blush">
+                <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-blush">
                   {src && <Image src={src} alt={item.product_name} fill sizes="96px" className="object-cover" />}
                 </div>
                 <div className="flex flex-1 flex-col justify-between gap-2">
@@ -66,7 +66,7 @@ export function CartView() {
                     <p className="text-xs text-muted">سایز {item.size} · رنگ {item.color}</p>
                   </div>
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="flex items-center rounded-full border border-blush-deep">
+                    <div className="flex items-center rounded-full border border-line">
                       <button
                         type="button"
                         aria-label="کاهش تعداد"
@@ -110,7 +110,7 @@ export function CartView() {
           <span className="text-muted">تعداد کالا</span>
           <span>{formatNumber(cart.total_items)}</span>
         </div>
-        <div className="flex justify-between border-t border-blush-deep pt-4 font-semibold">
+        <div className="flex justify-between border-t border-line pt-4 font-semibold">
           <span>جمع کل</span>
           <span>{formatToman(cart.subtotal)}</span>
         </div>

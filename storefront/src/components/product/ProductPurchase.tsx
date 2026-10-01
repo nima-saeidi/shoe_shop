@@ -66,7 +66,7 @@ export function ProductPurchase({ product, onColorChange }: { product: Product; 
                 onColorChange?.(c)
               }}
               className={`rounded-full border px-4 py-1.5 text-sm transition ${
-                c === color ? 'border-brand bg-blush-deep font-semibold text-brand-dark' : 'border-blush-deep bg-white hover:border-brand/50'
+                c === color ? 'border-brand bg-blush-deep font-semibold text-brand-dark' : 'border-line bg-white hover:border-brand/50'
               }`}
             >
               {c}
@@ -91,7 +91,7 @@ export function ProductPurchase({ product, onColorChange }: { product: Product; 
                   setQty((q) => Math.min(q, Math.max(v.stock_quantity, 1)))
                 }}
                 className={`min-w-12 rounded-xl border px-3 py-1.5 text-sm transition disabled:cursor-not-allowed disabled:text-muted/40 disabled:line-through ${
-                  v.id === variantId ? 'border-brand bg-brand text-white' : 'border-blush-deep bg-white hover:border-brand/50'
+                  v.id === variantId ? 'border-brand bg-brand text-white' : 'border-line bg-white hover:border-brand/50'
                 }`}
               >
                 {v.size}
@@ -102,7 +102,7 @@ export function ProductPurchase({ product, onColorChange }: { product: Product; 
       </fieldset>
 
       <div className="flex items-center gap-4">
-        <div className="flex items-center rounded-full border border-blush-deep bg-white">
+        <div className="flex items-center rounded-full border border-line bg-white">
           <button type="button" aria-label="کاهش تعداد" className="px-4 py-2" onClick={() => setQty((q) => Math.max(1, q - 1))}>
             −
           </button>

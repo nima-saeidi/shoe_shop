@@ -11,13 +11,10 @@ export const revalidate = 300
 
 function SectionTitle({ children, href }: { children: React.ReactNode; href?: string }) {
   return (
-    <div className="mb-5 flex items-center justify-between">
-      <h2 className="flex items-center gap-3 text-xl font-bold">
-        {children}
-        <span aria-hidden="true" className="text-brand">♥</span>
-      </h2>
+    <div className="mb-5 flex items-center justify-between border-b border-line pb-3">
+      <h2 className="border-s-4 border-brand ps-3 text-xl font-bold">{children}</h2>
       {href && (
-        <Link href={href} className="btn btn-soft !px-4 !py-1.5 text-xs">
+        <Link href={href} className="text-sm font-medium text-brand hover:text-brand-dark">
           مشاهده همه ‹
         </Link>
       )}
@@ -38,17 +35,20 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-12">
-      <section className="relative isolate overflow-hidden rounded-3xl bg-gradient-to-l from-[#f3d6d2] via-[#f6e0dc] to-[#f9ece9] shadow-soft">
-        <div className="grid items-center gap-6 p-8 sm:p-12 md:grid-cols-2">
-          <div className="text-center">
-            <h1 className="text-3xl font-extrabold leading-tight sm:text-5xl">زیبایی در هر قدم</h1>
-            <p className="mt-4 text-base text-ink/80 sm:text-lg">کفش‌های زنانه با طراحی مدرن و کیفیت بالا</p>
-            <Link href="/products" className="btn btn-primary mt-7 px-8 py-3">
-              مشاهده محصولات ‹
-            </Link>
-            <p aria-hidden="true" className="mt-5 text-brand">♥</p>
+      <section className="relative isolate overflow-hidden rounded-2xl bg-gradient-to-l from-navy via-[#1d2540] to-wine text-white shadow-soft">
+        <div className="grid items-center gap-8 p-8 sm:p-12 md:grid-cols-2">
+          <div>
+            <p className="mb-3 inline-block rounded-md bg-white/10 px-3 py-1 text-xs text-white/80">تولیدی کفش تبریز</p>
+            <h1 className="text-3xl font-extrabold leading-tight sm:text-4xl lg:text-5xl">کفش زنانه با کیفیت و طراحی روز</h1>
+            <p className="mt-4 max-w-md text-base leading-8 text-white/75">
+              مجموعه‌ای از کفش پاشنه‌دار، بوت، صندل و کتانی؛ مستقیم از کارگاه تولید و با ارسال به سراسر ایران.
+            </p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link href="/products" className="btn bg-white px-7 py-3 text-brand hover:bg-blush">مشاهده محصولات</Link>
+              <Link href="/about" className="btn border border-white/40 px-7 py-3 text-white hover:bg-white/10">درباره پانیک</Link>
+            </div>
           </div>
-          <div className="relative mx-auto aspect-[4/3] w-full max-w-md overflow-hidden rounded-3xl bg-white/40">
+          <div className="relative mx-auto aspect-[4/3] w-full max-w-md overflow-hidden rounded-xl bg-white/10 ring-1 ring-white/20">
             {heroSrc && heroProduct ? (
               <Image
                 src={heroSrc}
@@ -70,7 +70,7 @@ export default async function HomePage() {
           <ul className="flex flex-wrap gap-3">
             {categories.slice(0, 8).map((c) => (
               <li key={c.id}>
-                <Link href={`/category/${slugPath(c.slug)}`} className="btn btn-soft px-6 py-3 text-base">
+                <Link href={`/category/${slugPath(c.slug)}`} className="btn border border-line bg-white px-6 py-2.5 text-ink hover:border-brand hover:text-brand">
                   {c.name}
                 </Link>
               </li>
