@@ -9,6 +9,9 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends gcc libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Override with a closer mirror when files.pythonhosted.org is slow/blocked (see PIP_INDEX_URL in .env.example).
+ARG PIP_INDEX_URL=https://pypi.org/simple
+ENV PIP_INDEX_URL=$PIP_INDEX_URL
 COPY requirements.txt .
 RUN pip install --no-cache-dir --default-timeout=120 --retries 10 -r requirements.txt
 
