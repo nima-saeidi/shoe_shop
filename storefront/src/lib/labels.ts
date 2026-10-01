@@ -38,4 +38,31 @@ export const STATUS_TONE: Record<string, string> = {
   failed: 'bg-red-100 text-red-700',
   returned: 'bg-red-100 text-red-700',
   refunded: 'bg-slate-100 text-slate-700',
+  open: 'bg-amber-100 text-amber-800',
+  answered: 'bg-emerald-100 text-emerald-800',
+  closed: 'bg-slate-100 text-slate-700',
+  approved: 'bg-emerald-100 text-emerald-800',
+  rejected: 'bg-red-100 text-red-700',
+  completed: 'bg-sky-100 text-sky-800',
+}
+
+export const TICKET_STATUS_FA: Record<string, string> = {
+  open: 'در انتظار پاسخ',
+  answered: 'پاسخ داده شده',
+  closed: 'بسته شده',
+}
+
+export const RETURN_STATUS_FA: Record<string, string> = {
+  pending: 'در انتظار بررسی',
+  approved: 'تأیید شده',
+  rejected: 'رد شده',
+  completed: 'تکمیل شده',
+}
+
+export const RETURN_REASON_FA: Record<string, string> = {
+  wrong_size: 'سایز نامناسب',
+  defective: 'کالا معیوب است',
+  not_as_described: 'با توضیحات مطابقت ندارد',
+  changed_mind: 'تغییر نظر',
+  other: 'سایر',
 }

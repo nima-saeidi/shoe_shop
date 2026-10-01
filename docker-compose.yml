@@ -80,6 +80,9 @@ services:
       - "${HTTP_PORT:-80}:80"
       - "${HTTPS_PORT:-443}:443"
       - "${HTTPS_PORT:-443}:443/udp"
+      # Extra listeners, used when there are no sub-domains (IP-only access): admin on 8081, API on 8082.
+      - "8081:8081"
+      - "8082:8082"
     environment:
       SITE_DOMAIN: ${SITE_DOMAIN:-http://localhost}
       ADMIN_DOMAIN: ${ADMIN_DOMAIN:-http://admin.localhost}

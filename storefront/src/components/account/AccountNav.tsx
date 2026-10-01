@@ -8,6 +8,8 @@ import { useAuthStore } from '@/store/auth'
 const ITEMS = [
   { href: '/account', label: 'داشبورد' },
   { href: '/account/orders', label: 'سفارش‌های من' },
+  { href: '/account/returns', label: 'مرجوعی‌ها' },
+  { href: '/account/tickets', label: 'تیکت‌های پشتیبانی' },
   { href: '/account/addresses', label: 'آدرس‌ها' },
   { href: '/account/wallet', label: 'کیف پول' },
   { href: '/account/profile', label: 'اطلاعات حساب' },

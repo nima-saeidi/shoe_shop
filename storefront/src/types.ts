@@ -171,3 +171,36 @@ export interface Review {
   comment: string | null
   created_at: string
 }
+
+export interface TicketMessage {
+  id: number
+  sender_id: number
+  sender_name: string | null
+  is_admin: boolean
+  message: string
+  created_at: string
+}
+
+export interface Ticket {
+  id: number
+  subject: string
+  status: string
+  created_at: string
+  updated_at: string
+  messages: TicketMessage[]
+}
+
+export interface ReturnRequest {
+  id: number
+  order_id: number
+  order_item_id: number
+  reason: string
+  description: string | null
+  status: string
+  admin_note: string | null
+  created_at: string
+  order_number: string | null
+  product_name: string | null
+  size: string | null
+  color: string | null
+}

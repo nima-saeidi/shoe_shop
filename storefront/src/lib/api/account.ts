@@ -7,6 +7,8 @@ import type {
   CheckoutInput,
   Order,
   Page,
+  ReturnRequest,
+  Ticket,
   User,
   WalletTransaction,
 } from '@/types'
@@ -49,4 +51,17 @@ export const addressApi = {
 export const walletApi = {
   balance: () => http.get<{ balance: number }>('/wallet/balance').then((r) => r.data),
   transactions: () => http.get<WalletTransaction[]>('/wallet/transactions').then((r) => r.data),
+}
+
+export const ticketApi = {
+  mine: () => http.get<Ticket[]>('/tickets/my').then((r) => r.data),
+  get: (id: number) => http.get<Ticket>(`/tickets/${id}`).then((r) => r.data),
+  create: (subject: string, message: string) => http.post<Ticket>('/tickets', { subject, message }).then((r) => r.data),
+  reply: (id: number, message: string) => http.post<Ticket>(`/tickets/${id}/reply`, { message }).then((r) => r.data),
+}
+
+export const returnApi = {
+  mine: () => http.get<ReturnRequest[]>('/returns/my').then((r) => r.data),
+  create: (order_item_id: number, reason: string, description?: string) =>
+    http.post<ReturnRequest>('/returns', { order_item_id, reason, description }).then((r) => r.data),
 }

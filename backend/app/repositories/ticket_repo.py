@@ -16,7 +16,9 @@ class TicketRepository(BaseRepository[SupportTicket]):
 
     async def get(self, id_: int):
         stmt = self._with_relations(select(SupportTicket).where(SupportTicket.id == id_))
-        result = await self.db.execute(stmt)
+        # populate_existing: re-read the messages collection even if this ticket is already in the
+        # session (otherwise a reply just added would be missing from the response).
+        result = await self.db.execute(stmt.execution_options(populate_existing=True))
         return result.scalar_one_or_none()
 
     async def list_for_user(self, user_id: int, offset: int = 0, limit: int = 50):

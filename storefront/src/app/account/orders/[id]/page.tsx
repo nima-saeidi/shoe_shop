@@ -39,6 +39,7 @@ export default function OrderDetailPage() {
   if (!order) return error ? <Alert>{error}</Alert> : <Spinner />
 
   const canCancel = order.status === 'pending' || order.status === 'confirmed'
+  const canReturn = order.status === 'delivered'
   const canPay = order.payment_status === 'pending' && order.status !== 'cancelled'
 
   return (
@@ -96,6 +97,12 @@ export default function OrderDetailPage() {
           <div className="flex justify-between text-base font-bold"><dt>مبلغ نهایی</dt><dd>{formatToman(order.grand_total)}</dd></div>
         </dl>
       </section>
+
+      {canReturn && (
+        <Link href={`/account/returns?order=${order.id}`} className="btn btn-outline w-fit">
+          ثبت درخواست مرجوعی
+        </Link>
+      )}
 
       {(canPay || canCancel) && (
         <div className="flex flex-wrap gap-3">
