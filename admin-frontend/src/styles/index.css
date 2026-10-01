@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap');
+@import 'vazirmatn/Vazirmatn-font-face.css';
 
 * {
   box-sizing: border-box;
@@ -14,4 +14,39 @@ body {
   margin: 0;
   font-family: 'Vazirmatn', 'Segoe UI', Tahoma, sans-serif;
   background-color: #f4f5fa;
+  overflow-x: hidden;
+}
+
+/* Wide tables scroll horizontally inside their card instead of squeezing or breaking the page. */
+.ant-table-wrapper .ant-table-container {
+  overflow-x: auto;
+}
+.ant-table-wrapper .ant-table-content > table {
+  min-width: max-content;
+}
+
+img {
+  max-width: 100%;
+}
+
+@media (max-width: 575px) {
+  .ant-modal {
+    max-width: calc(100vw - 16px) !important;
+    margin-inline: auto;
+  }
+  .ant-form-inline {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ant-form-inline .ant-form-item {
+    margin-inline-end: 0;
+  }
+  .ant-picker,
+  .ant-select,
+  .ant-input-affix-wrapper,
+  .ant-input-search,
+  .ant-input-number,
+  .ant-form-item {
+    max-width: 100%;
+  }
 }

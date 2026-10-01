@@ -42,13 +42,14 @@ export function LoginPage() {
     <div
       style={{
         minHeight: '100vh',
+        padding: 16,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         background: 'linear-gradient(135deg, #4f46e5, #3730a3)',
       }}
     >
-      <Card style={{ width: 380, borderRadius: 16 }}>
+      <Card style={{ width: 380, maxWidth: "100%", borderRadius: 16 }}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <div style={{ fontSize: 32 }}>👞</div>
           <Typography.Title level={4} style={{ margin: '8px 0 0' }}>

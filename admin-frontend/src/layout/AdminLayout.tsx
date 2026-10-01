@@ -47,6 +47,7 @@ const menuItems = [
 
 export function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false)
+  const [broken, setBroken] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
@@ -64,7 +65,21 @@ export function AdminLayout() {
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider collapsible collapsed={collapsed} onCollapse={setCollapsed} width={260} theme="dark">
+      {/* On phones/tablets the sidebar collapses to zero width and opens as an overlay. */}
+      <Sider
+        collapsible
+        breakpoint="lg"
+        collapsedWidth={broken ? 0 : 80}
+        collapsed={collapsed}
+        onCollapse={setCollapsed}
+        onBreakpoint={(isBroken) => {
+          setBroken(isBroken)
+          setCollapsed(isBroken)
+        }}
+        width={260}
+        theme="dark"
+        style={broken ? { position: 'fixed', insetBlock: 0, insetInlineStart: 0, zIndex: 100, overflowY: 'auto' } : undefined}
+      >
         <div
           style={{
             color: '#fff',
@@ -82,12 +97,15 @@ export function AdminLayout() {
           mode="inline"
           selectedKeys={[selectedKey]}
           items={menuItems}
-          onClick={({ key }) => navigate(key)}
+          onClick={({ key }) => {
+            navigate(key)
+            if (broken) setCollapsed(true)
+          }}
         />
       </Sider>
       <Layout>
-        <Header style={{ background: '#fff', padding: '0 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Typography.Text strong>پنل مدیریت فروشگاه کفش</Typography.Text>
+        <Header style={{ background: '#fff', padding: broken ? '0 16px 0 56px' : '0 20px', gap: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Typography.Text strong ellipsis>پنل مدیریت فروشگاه کفش</Typography.Text>
           <Dropdown
             menu={{
               items: [{ key: 'logout', icon: <LogoutOutlined />, label: 'خروج از حساب' }],
@@ -101,11 +119,11 @@ export function AdminLayout() {
           >
             <Space style={{ cursor: 'pointer' }}>
               <Avatar icon={<UserOutlined />} />
-              <span>{user?.full_name}</span>
+              {!broken && <span>{user?.full_name}</span>}
             </Space>
           </Dropdown>
         </Header>
-        <Content style={{ margin: 20 }}>
+        <Content style={{ margin: broken ? 12 : 20, minWidth: 0 }}>
           <Outlet />
         </Content>
       </Layout>

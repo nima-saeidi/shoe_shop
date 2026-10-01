@@ -1,31 +1,101 @@
-version: "3.9"
+# Runs the whole stack: PostgreSQL + FastAPI backend + React admin + Next.js storefront + Caddy (HTTPS).
+#   cp .env.example .env   # fill in domains + secrets
+#   docker compose up -d --build
+name: panik
 
 services:
   db:
     image: postgres:16-alpine
-    container_name: shoe_shop_db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: shoe_user
-      POSTGRES_PASSWORD: shoe_pass
-      POSTGRES_DB: shoe_shop
-    ports:
-      - "5432:5432"
+      POSTGRES_USER: ${POSTGRES_USER:-shoe_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-shoe_shop}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [internal]
 
-  web:
-    build: .
-    container_name: shoe_shop_web
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-    volumes:
-      - .:/code
-    ports:
-      - "8000:8000"
-    env_file:
-      - .env
+  backend:
+    build: ./backend
+    restart: unless-stopped
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    environment:
+      PROJECT_NAME: ${PROJECT_NAME:-Shoe Shop}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      DEBUG: "false"
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-shoe_user}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-shoe_shop}
+      SYNC_DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-shoe_user}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-shoe_shop}
+      SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
+      SESSION_SECRET_KEY: ${SESSION_SECRET_KEY:?set SESSION_SECRET_KEY in .env}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      # Only needed if some other origin calls the API from a browser; the bundled frontends are same-origin.
+      BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-[]}
+      SMS_PROVIDER: ${SMS_PROVIDER:-}
+      SMS_API_KEY: ${SMS_API_KEY:-}
+      SMS_SENDER_NUMBER: ${SMS_SENDER_NUMBER:-}
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-}
+      PAYMENT_MERCHANT_ID: ${PAYMENT_MERCHANT_ID:-}
+      PAYMENT_CALLBACK_URL: ${PAYMENT_CALLBACK_URL:-}
+      WHOLESALE_MIN_ORDER_AMOUNT: ${WHOLESALE_MIN_ORDER_AMOUNT:-0}
+    volumes:
+      - uploads:/code/app/static/uploads
+      - backend_logs:/code/logs
+    networks: [internal]
+
+  admin:
+    build: ./admin-frontend
+    restart: unless-stopped
+    depends_on: [backend]
+    environment:
+      BACKEND_URL: http://backend:8000
+    networks: [internal]
+
+  storefront:
+    build:
+      context: ./storefront
+      args:
+        API_ORIGIN: http://backend:8000
+        # Public URL of the shop (canonical links, sitemap, Open Graph). Rebuild after changing it.
+        NEXT_PUBLIC_SITE_URL: ${SITE_PUBLIC_URL:-http://localhost}
+        NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION: ${GOOGLE_SITE_VERIFICATION:-}
+    restart: unless-stopped
+    depends_on: [backend]
+    environment:
+      API_ORIGIN: http://backend:8000
+    networks: [internal]
+
+  proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on: [storefront, admin, backend]
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTPS_PORT:-443}:443/udp"
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:-http://localhost}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN:-http://admin.localhost}
+      API_DOMAIN: ${API_DOMAIN:-http://api.localhost}
+    volumes:
+      - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [internal, default]
+
+networks:
+  internal:
 
 volumes:
   pgdata:
+  uploads:
+  backend_logs:
+  caddy_data:
+  caddy_config:

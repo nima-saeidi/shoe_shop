@@ -17,7 +17,7 @@ import {
   Upload,
   message,
 } from 'antd'
-import type { UploadProps } from 'antd'
+import type { UploadFile } from 'antd'
 import { DeleteOutlined, StarFilled, StarOutlined, UploadOutlined } from '@ant-design/icons'
 import { listCategories } from '../../api/categories'
 import { listBrands } from '../../api/brands'
@@ -46,6 +46,7 @@ export function ProductFormPage() {
   const queryClient = useQueryClient()
   const [form] = Form.useForm()
   const [variantColor, setVariantColor] = useState<string | undefined>()
+  const [newImages, setNewImages] = useState<UploadFile[]>([])
 
   const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: () => listCategories(1, 200) })
   const { data: brands } = useQuery({ queryKey: ['brands'], queryFn: () => listBrands(1, 200) })
@@ -79,7 +80,17 @@ export function ProductFormPage() {
   }
 
   const createMutation = useMutation({
-    mutationFn: createProduct,
+    mutationFn: async ({ input, files }: { input: ProductInput; files: File[] }) => {
+      const created = await createProduct(input)
+      if (files.length) {
+        try {
+          await uploadProductImages(created.id, files)
+        } catch (err) {
+          message.warning('محصول ایجاد شد اما آپلود تصاویر ناموفق بود: ' + getApiErrorMessage(err))
+        }
+      }
+      return created
+    },
     onSuccess: (created) => {
       message.success('محصول با موفقیت ایجاد شد')
       queryClient.invalidateQueries({ queryKey: ['products'] })
@@ -178,7 +189,10 @@ export function ProductFormPage() {
       is_featured: values.is_featured,
       variants,
     }
-    createMutation.mutate(input)
+    createMutation.mutate({
+      input,
+      files: newImages.map((f) => f.originFileObj).filter((f): f is NonNullable<typeof f> => Boolean(f)) as File[],
+    })
   }
 
   const variantColumns = [
@@ -214,17 +228,17 @@ export function ProductFormPage() {
               </Form.Item>
 
               <Row gutter={12}>
-                <Col span={8}>
+                <Col xs={24} sm={8}>
                   <Form.Item name="price" label="قیمت (تومان)" rules={[{ required: true, message: 'الزامی' }]}>
                     <InputNumber style={{ width: '100%' }} min={0} />
                   </Form.Item>
                 </Col>
-                <Col span={8}>
+                <Col xs={24} sm={8}>
                   <Form.Item name="discount_price" label="قیمت با تخفیف">
                     <InputNumber style={{ width: '100%' }} min={0} />
                   </Form.Item>
                 </Col>
-                <Col span={8}>
+                <Col xs={24} sm={8}>
                   <Form.Item name="sku" label="کد کالا (SKU)" rules={[{ required: true, message: 'الزامی' }]}>
                     <Input disabled={isEdit} />
                   </Form.Item>
@@ -232,12 +246,12 @@ export function ProductFormPage() {
               </Row>
 
               <Row gutter={12}>
-                <Col span={12}>
+                <Col xs={24} sm={12}>
                   <Form.Item name="wholesale_price" label="قیمت عمده (هر واحد)">
                     <InputNumber style={{ width: '100%' }} min={0} placeholder="خالی = قیمت خرد برای همه" />
                   </Form.Item>
                 </Col>
-                <Col span={12}>
+                <Col xs={24} sm={12}>
                   <Form.Item name="wholesale_min_qty" label="حداقل تعداد برای قیمت عمده" initialValue={1}>
                     <InputNumber style={{ width: '100%' }} min={1} />
                   </Form.Item>
@@ -245,17 +259,17 @@ export function ProductFormPage() {
               </Row>
 
               <Row gutter={12}>
-                <Col span={8}>
+                <Col xs={24} sm={8}>
                   <Form.Item name="gender" label="جنسیت" initialValue="unisex">
                     <Select options={GENDERS.map((g) => ({ value: g, label: GENDER_FA[g] }))} />
                   </Form.Item>
                 </Col>
-                <Col span={8}>
+                <Col xs={24} sm={8}>
                   <Form.Item name="category_id" label="دسته‌بندی" rules={[{ required: true, message: 'الزامی' }]}>
                     <Select options={(categories?.items ?? []).map((c) => ({ value: c.id, label: c.name }))} />
                   </Form.Item>
                 </Col>
-                <Col span={8}>
+                <Col xs={24} sm={8}>
                   <Form.Item name="brand_id" label="برند" rules={[{ required: true, message: 'الزامی' }]}>
                     <Select options={(brands?.items ?? []).map((b) => ({ value: b.id, label: b.name }))} />
                   </Form.Item>
@@ -264,22 +278,37 @@ export function ProductFormPage() {
 
               {!isEdit && (
                 <Row gutter={12}>
-                  <Col span={10}>
+                  <Col xs={24} sm={10}>
                     <Form.Item name="sizes" label="سایزها (با کاما جدا کنید)">
                       <Input placeholder="38, 39, 40, 41" />
                     </Form.Item>
                   </Col>
-                  <Col span={10}>
+                  <Col xs={24} sm={10}>
                     <Form.Item name="colors" label="رنگ‌ها (با کاما جدا کنید)">
                       <Input placeholder="مشکی, سفید" />
                     </Form.Item>
                   </Col>
-                  <Col span={4}>
+                  <Col xs={24} sm={4}>
                     <Form.Item name="stock_quantity" label="موجودی هر ورینت" initialValue={10}>
                       <InputNumber style={{ width: '100%' }} min={0} />
                     </Form.Item>
                   </Col>
                 </Row>
+              )}
+
+              {!isEdit && (
+                <Form.Item label="تصاویر محصول (چند فایل)">
+                  <Upload
+                    multiple
+                    accept="image/*"
+                    listType="picture-card"
+                    fileList={newImages}
+                    beforeUpload={() => false}
+                    onChange={({ fileList }) => setNewImages(fileList)}
+                  >
+                    <UploadOutlined /> انتخاب
+                  </Upload>
+                </Form.Item>
               )}
 
               <Row gutter={24}>
@@ -373,12 +402,13 @@ export function ProductFormPage() {
                 multiple
                 showUploadList={false}
                 accept="image/*"
-                customRequest={(({ file, onSuccess }) => {
-                  uploadImagesMutation.mutate(
-                    { files: [file as File], color: variantColor },
-                    { onSuccess: () => onSuccess?.({}) },
-                  )
-                }) as UploadProps['customRequest']}
+                beforeUpload={(_file, fileList) => {
+                  // antd calls this once per file; upload the whole selection in one request.
+                  if (_file === fileList[0]) {
+                    uploadImagesMutation.mutate({ files: fileList as unknown as File[], color: variantColor })
+                  }
+                  return false
+                }}
               >
                 <Button icon={<UploadOutlined />} loading={uploadImagesMutation.isPending} block>
                   آپلود عکس‌ها (چندتایی)

@@ -1,4 +1,8 @@
 import dayjs from 'dayjs'
+import 'dayjs/locale/fa'
+import jalliPlugin from 'jalali-plugin-dayjs'
+
+dayjs.extend(jalliPlugin)
 
 export function formatToman(value: number | null | undefined): string {
   if (value === null || value === undefined || Number.isNaN(value)) return '0'
@@ -7,10 +11,10 @@ export function formatToman(value: number | null | undefined): string {
 
 export function formatDateTime(value: string | null | undefined): string {
   if (!value) return '-'
-  return dayjs(value).format('YYYY-MM-DD HH:mm')
+  return dayjs(value).calendar('jalali').locale('fa').format('YYYY/MM/DD HH:mm')
 }
 
 export function formatDate(value: string | null | undefined): string {
   if (!value) return '-'
-  return dayjs(value).format('YYYY-MM-DD')
+  return dayjs(value).calendar('jalali').locale('fa').format('YYYY/MM/DD')
 }

@@ -1,0 +1,24 @@
+# Reverse proxy + automatic HTTPS (Let's Encrypt). Domains come from the root .env.
+# For local testing use  SITE_DOMAIN=http://localhost  etc. (plain HTTP, no certificates).
+
+{$SITE_DOMAIN:http://localhost} {
+	encode zstd gzip
+	reverse_proxy storefront:3000
+}
+
+{$ADMIN_DOMAIN:http://admin.localhost} {
+	encode zstd gzip
+	request_body {
+		max_size 30MB
+	}
+	reverse_proxy admin:80
+}
+
+# Optional: public API / Swagger docs / legacy Jinja admin on their own domain.
+{$API_DOMAIN:http://api.localhost} {
+	encode zstd gzip
+	request_body {
+		max_size 30MB
+	}
+	reverse_proxy backend:8000
+}

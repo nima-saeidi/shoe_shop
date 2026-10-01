@@ -1,12 +1,6 @@
-__pycache__/
-*.py[cod]
 .env
 .venv/
 venv/
-*.egg-info/
-.pytest_cache/
-app/static/uploads/*
-!app/static/uploads/.gitkeep
-.vscode/
 .idea/
+.vscode/
 *.log

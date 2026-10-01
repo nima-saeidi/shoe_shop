@@ -96,12 +96,12 @@ export function ManualOrderPage() {
                 <Input.TextArea rows={2} />
               </Form.Item>
               <Row gutter={12}>
-                <Col span={12}>
+                <Col xs={24} sm={12}>
                   <Form.Item name="shipping_city" label="شهر" rules={[{ required: true }]}>
                     <Input />
                   </Form.Item>
                 </Col>
-                <Col span={12}>
+                <Col xs={24} sm={12}>
                   <Form.Item name="shipping_postal_code" label="کد پستی" rules={[{ required: true }]}>
                     <Input dir="ltr" />
                   </Form.Item>

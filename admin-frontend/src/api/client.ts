@@ -1,12 +1,41 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '../store/authStore'
+import { isTokenExpired } from '../utils/jwt'
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
 export const apiClient = axios.create({ baseURL })
 
-apiClient.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().accessToken
+function isAuthEndpoint(url?: string): boolean {
+  return Boolean(url && (url.includes('/auth/login') || url.includes('/auth/refresh')))
+}
+
+function forceLogout() {
+  useAuthStore.getState().logout()
+  if (window.location.pathname !== '/login') window.location.href = '/login'
+}
+
+apiClient.interceptors.request.use(async (config) => {
+  if (isAuthEndpoint(config.url)) return config
+
+  let token = useAuthStore.getState().accessToken
+  // Refresh proactively when the access token is expired/about to expire, instead of
+  // sending a request that is guaranteed to bounce with a 401.
+  if (token && isTokenExpired(token, 30_000)) {
+    if (isTokenExpired(useAuthStore.getState().refreshToken)) {
+      forceLogout()
+      return Promise.reject(new axios.Cancel('session expired'))
+    }
+    try {
+      refreshPromise ??= refreshAccessToken().finally(() => {
+        refreshPromise = null
+      })
+      token = await refreshPromise
+    } catch {
+      forceLogout()
+      return Promise.reject(new axios.Cancel('session expired'))
+    }
+  }
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
@@ -38,7 +67,12 @@ apiClient.interceptors.response.use(
   async (error: AxiosError) => {
     const originalRequest = error.config as RetryableConfig | undefined
 
-    if (error.response?.status === 401 && originalRequest && !originalRequest._retried) {
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retried &&
+      !isAuthEndpoint(originalRequest.url)
+    ) {
       originalRequest._retried = true
       try {
         refreshPromise ??= refreshAccessToken().finally(() => {
@@ -49,8 +83,7 @@ apiClient.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newToken}`
         return apiClient(originalRequest)
       } catch {
-        useAuthStore.getState().logout()
-        window.location.href = '/login'
+        forceLogout()
         return Promise.reject(error)
       }
     }

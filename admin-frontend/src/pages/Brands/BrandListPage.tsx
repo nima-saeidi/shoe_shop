@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Avatar, Button, Form, Input, Modal, Popconfirm, Switch, Table, Upload, message } from 'antd'
-import type { UploadProps } from 'antd'
+import type { UploadFile, UploadProps } from 'antd'
 import { DeleteOutlined, EditOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons'
 import { createBrand, deleteBrand, listBrands, updateBrand, uploadBrandLogo } from '../../api/brands'
 import { getApiErrorMessage } from '../../api/client'
@@ -13,13 +13,18 @@ export function BrandListPage() {
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Brand | null>(null)
   const [form] = Form.useForm<BrandInput>()
+  const [logoFiles, setLogoFiles] = useState<UploadFile[]>([])
 
   const { data, isLoading } = useQuery({ queryKey: ['brands'], queryFn: () => listBrands(1, 200) })
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['brands'] })
 
   const createMutation = useMutation({
-    mutationFn: createBrand,
+    mutationFn: async ({ input, file }: { input: BrandInput; file?: File }) => {
+      const brand = await createBrand(input)
+      if (file) await uploadBrandLogo(brand.id, file)
+      return brand
+    },
     onSuccess: () => {
       message.success('برند با موفقیت ایجاد شد')
       invalidate()
@@ -29,7 +34,11 @@ export function BrandListPage() {
   })
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, input }: { id: number; input: Partial<BrandInput> }) => updateBrand(id, input),
+    mutationFn: async ({ id, input, file }: { id: number; input: Partial<BrandInput>; file?: File }) => {
+      const brand = await updateBrand(id, input)
+      if (file) await uploadBrandLogo(id, file)
+      return brand
+    },
     onSuccess: () => {
       message.success('برند به‌روزرسانی شد')
       invalidate()
@@ -59,13 +68,15 @@ export function BrandListPage() {
   function openCreate() {
     setEditing(null)
     form.resetFields()
+    setLogoFiles([])
     form.setFieldsValue({ is_active: true })
     setModalOpen(true)
   }
 
   function openEdit(brand: Brand) {
     setEditing(brand)
-    form.setFieldsValue({ name: brand.name, logo_url: brand.logo_url ?? '', is_active: brand.is_active })
+    setLogoFiles([])
+    form.setFieldsValue({ name: brand.name, is_active: brand.is_active })
     setModalOpen(true)
   }
 
@@ -75,10 +86,12 @@ export function BrandListPage() {
   }
 
   function handleSubmit(values: BrandInput) {
+    const file = logoFiles[0]?.originFileObj
+    const input = { name: values.name, is_active: values.is_active }
     if (editing) {
-      updateMutation.mutate({ id: editing.id, input: values })
+      updateMutation.mutate({ id: editing.id, input, file })
     } else {
-      createMutation.mutate(values)
+      createMutation.mutate({ input, file })
     }
   }
 
@@ -141,8 +154,17 @@ export function BrandListPage() {
           <Form.Item name="name" label="نام برند" rules={[{ required: true, message: 'نام را وارد کنید' }]}>
             <Input />
           </Form.Item>
-          <Form.Item name="logo_url" label="آدرس تصویر لوگو (اختیاری)">
-            <Input dir="ltr" placeholder="یا بعد از ذخیره از دکمه آپلود استفاده کنید" />
+          <Form.Item label="لوگو (فایل تصویر)">
+            <Upload
+              accept="image/*"
+              maxCount={1}
+              listType="picture"
+              fileList={logoFiles}
+              beforeUpload={() => false}
+              onChange={({ fileList }) => setLogoFiles(fileList.slice(-1))}
+            >
+              <Button icon={<UploadOutlined />}>انتخاب فایل لوگو</Button>
+            </Upload>
           </Form.Item>
           <Form.Item name="is_active" label="فعال" valuePropName="checked">
             <Switch />

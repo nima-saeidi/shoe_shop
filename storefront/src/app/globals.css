@@ -1,0 +1,55 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: var(--font-vazir), Tahoma, sans-serif;
+  --color-rose-50: #fdf6f4;
+  --color-blush: #fbf1ee;
+  --color-blush-deep: #f6dcd8;
+  --color-brand: #c9737f;
+  --color-brand-dark: #a95562;
+  --color-wine: #7a2338;
+  --color-ink: #1d2a44;
+  --color-muted: #7c6f72;
+  --radius-card: 1.25rem;
+  --shadow-soft: 0 6px 24px -8px rgb(150 90 100 / 0.22);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-blush);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50;
+}
+.btn-primary {
+  @apply bg-brand text-white shadow-soft hover:bg-brand-dark;
+}
+.btn-soft {
+  @apply bg-blush-deep text-brand-dark hover:bg-[#f1cdc8];
+}
+.btn-outline {
+  @apply border border-brand/40 text-brand-dark hover:bg-blush-deep;
+}
+.input {
+  @apply w-full rounded-xl border border-blush-deep bg-white px-4 py-2.5 text-sm outline-none transition placeholder:text-muted/70 focus:border-brand focus:ring-2 focus:ring-brand/20;
+}
+.card {
+  @apply rounded-[var(--radius-card)] bg-white shadow-soft;
+}
+:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

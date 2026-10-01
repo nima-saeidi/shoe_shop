@@ -1,11 +1,13 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { Result } from 'antd'
 import { useAuthStore } from '../store/authStore'
+import { isTokenExpired } from '../utils/jwt'
 
 export function ProtectedRoute() {
-  const { accessToken, user } = useAuthStore()
+  const { accessToken, refreshToken, user } = useAuthStore()
 
-  if (!accessToken) {
+  // Once the refresh token itself has expired there is no way to renew the session.
+  if (!accessToken || isTokenExpired(refreshToken)) {
     return <Navigate to="/login" replace />
   }
 
