@@ -12,7 +12,7 @@ const ITEMS = [
   { href: '/account/tickets', label: 'تیکت‌های پشتیبانی' },
   { href: '/account/addresses', label: 'آدرس‌ها' },
   { href: '/account/wallet', label: 'کیف پول' },
-  { href: '/account/profile', label: 'اطلاعات حساب' },
+  { href: '/account/profile', label: 'پروفایل من' },
 ]
 
 export function AccountNav() {

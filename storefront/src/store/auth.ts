@@ -6,6 +6,7 @@ interface AuthState {
   accessToken: string | null
   refreshToken: string | null
   user: User | null
+  /** true once the client has mounted (localStorage state is loaded synchronously by then) */
   hydrated: boolean
   setTokens: (access: string, refresh: string) => void
   setUser: (user: User | null) => void
@@ -26,7 +27,6 @@ export const useAuthStore = create<AuthState>()(
     {
       name: 'panik-auth',
       partialize: (s) => ({ accessToken: s.accessToken, refreshToken: s.refreshToken, user: s.user }),
-      onRehydrateStorage: () => () => useAuthStore.setState({ hydrated: true }),
     },
   ),
 )

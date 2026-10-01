@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import { ProfileCompletion } from '@/components/account/ProfileCompletion'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { orderApi } from '@/lib/api/account'
 import { formatDate, formatToman } from '@/lib/format'
@@ -26,6 +27,8 @@ export default function AccountDashboard() {
   return (
     <>
       <h1 className="text-2xl font-bold">سلام{user ? `، ${user.full_name}` : ''} 👋</h1>
+
+      <ProfileCompletion hideWhenComplete />
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="card p-5">

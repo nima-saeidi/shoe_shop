@@ -11,6 +11,12 @@ export function SessionBootstrap() {
   const hydrated = useAuthStore((s) => s.hydrated)
   const accessToken = useAuthStore((s) => s.accessToken)
 
+  // The persisted tokens are read from localStorage synchronously when the store is created in the
+  // browser, so by the time any effect runs the state is ready: flag it for the guards below.
+  useEffect(() => {
+    useAuthStore.setState({ hydrated: true })
+  }, [])
+
   useEffect(() => {
     if (!hydrated) return
     const { refreshToken, logout, setUser } = useAuthStore.getState()

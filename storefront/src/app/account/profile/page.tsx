@@ -2,9 +2,11 @@
 
 import { useState, type FormEvent } from 'react'
 import { Alert } from '@/components/ui/Alert'
+import { ProfileCompletion } from '@/components/account/ProfileCompletion'
 import { Field } from '@/components/ui/Field'
 import { authApi } from '@/lib/api/account'
-import { getApiError } from '@/lib/format'
+import { formatDate, getApiError } from '@/lib/format'
+import { isMobile } from '@/lib/profile'
 import { useAuthStore } from '@/store/auth'
 
 type Msg = { kind: 'error' | 'success'; text: string } | null
@@ -18,6 +20,8 @@ export default function ProfilePage() {
   async function saveProfile(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const f = new FormData(e.currentTarget)
+    const phone = String(f.get('phone_number')).trim()
+    if (phone && !isMobile(phone)) return setProfileMsg({ kind: 'error', text: 'شماره موبایل باید با ۰۹ شروع شود و ۱۱ رقم باشد.' })
     setBusy(true)
     setProfileMsg(null)
     try {
@@ -55,7 +59,22 @@ export default function ProfilePage() {
 
   return (
     <>
-      <h1 className="text-2xl font-bold">اطلاعات حساب</h1>
+      <h1 className="text-2xl font-bold">پروفایل من</h1>
+
+      {user && (
+        <section className="card flex items-center gap-4 p-5">
+          <span aria-hidden="true" className="flex h-14 w-14 items-center justify-center rounded-full bg-blush-deep text-xl font-bold text-brand-dark">
+            {user.full_name.trim().charAt(0)}
+          </span>
+          <div>
+            <p className="font-bold">{user.full_name}</p>
+            <p className="text-sm text-muted" dir="ltr">{user.email}</p>
+            <p className="text-xs text-muted">عضو از {formatDate(user.created_at)}</p>
+          </div>
+        </section>
+      )}
+
+      <ProfileCompletion />
 
       {user && (
         <form key={user.id + user.full_name} onSubmit={saveProfile} className="card space-y-4 p-5">
@@ -63,7 +82,7 @@ export default function ProfilePage() {
           {profileMsg && <Alert kind={profileMsg.kind}>{profileMsg.text}</Alert>}
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="نام و نام خانوادگی" name="full_name" defaultValue={user.full_name} required minLength={2} />
-            <Field label="شماره موبایل" name="phone_number" defaultValue={user.phone_number ?? ''} dir="ltr" type="tel" />
+            <Field label="شماره موبایل" name="phone_number" defaultValue={user.phone_number ?? ''} dir="ltr" type="tel" placeholder="09123456789" inputMode="numeric" maxLength={11} />
             <Field label="ایمیل" value={user.email} readOnly dir="ltr" disabled onChange={() => undefined} />
           </div>
           <button type="submit" disabled={busy} className="btn btn-primary">ذخیره</button>
