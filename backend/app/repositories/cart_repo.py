@@ -19,6 +19,9 @@ class CartRepository(BaseRepository[Cart]):
                 .selectinload(ProductVariant.product)
                 .selectinload(Product.images)
             )
+            # The cart is usually already in the session (loaded before an add/update/remove);
+            # without this the stale `items` collection would be returned after the commit.
+            .execution_options(populate_existing=True)
         )
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()

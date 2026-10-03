@@ -4,6 +4,7 @@ from app.api.v1.endpoints import (
     addresses,
     admin_dashboard,
     admin_logs,
+    admin_notifications,
     admin_orders,
     admin_products,
     admin_reports,
@@ -55,3 +56,4 @@ api_router.include_router(admin_products.router, prefix="/admin/products", tags=
 api_router.include_router(admin_orders.router, prefix="/admin/orders", tags=["Admin"])
 api_router.include_router(admin_reviews.router, prefix="/admin/reviews", tags=["Admin"])
 api_router.include_router(admin_tickets.router, prefix="/admin/tickets", tags=["Admin"])
+api_router.include_router(admin_notifications.router, prefix="/admin/notifications", tags=["Admin"])

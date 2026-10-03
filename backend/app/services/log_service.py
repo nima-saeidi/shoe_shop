@@ -23,6 +23,16 @@ CATEGORY_REVIEW = "review"
 CATEGORY_USER = "user"
 
 
+# Customer-triggered events the admin should be alerted about (bell in the admin header).
+NOTIFICATION_ACTIONS = [
+    "ticket_created",
+    "ticket_customer_reply",
+    "order_created",
+    "return_requested",
+    "wholesale_requested",
+]
+
+
 class LogService:
     def __init__(self, db: AsyncSession):
         self.db = db
@@ -71,3 +81,6 @@ class LogService:
 
     async def distinct_categories(self) -> list[str]:
         return await self.repo.distinct_categories()
+
+    async def latest_notifications(self, limit: int = 30):
+        return await self.repo.latest_by_actions(NOTIFICATION_ACTIONS, limit)

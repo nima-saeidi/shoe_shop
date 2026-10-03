@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import InvalidCredentialsError, NotFoundError
+from app.core.exceptions import AlreadyExistsError, InvalidCredentialsError, NotFoundError
 from app.core.security import hash_password, verify_password
 from app.models.log import LogLevel
 from app.models.user import User
@@ -23,6 +23,10 @@ class UserService:
 
     async def update_profile(self, user_id: int, data: UserUpdate) -> User:
         user = await self.get_profile(user_id)
+        if data.phone_number and data.phone_number != user.phone_number:
+            owner = await self.user_repo.get_by_phone(data.phone_number)
+            if owner and owner.id != user.id:
+                raise AlreadyExistsError("این شماره موبایل قبلاً برای حساب دیگری ثبت شده است")
         await self.user_repo.update(user, **data.model_dump(exclude_unset=True, exclude={"role"}))
         await self.db.commit()
         await self.db.refresh(user)

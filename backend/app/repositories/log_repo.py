@@ -56,3 +56,13 @@ class LogRepository(BaseRepository[ActivityLog]):
     async def distinct_categories(self) -> list[str]:
         result = await self.db.execute(select(ActivityLog.category).distinct().order_by(ActivityLog.category))
         return [row[0] for row in result.all()]
+
+    async def latest_by_actions(self, actions: list[str], limit: int = 30):
+        stmt = (
+            select(ActivityLog)
+            .options(selectinload(ActivityLog.actor))
+            .where(ActivityLog.action.in_(actions))
+            .order_by(ActivityLog.id.desc())
+            .limit(limit)
+        )
+        return (await self.db.execute(stmt)).scalars().all()

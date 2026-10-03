@@ -23,6 +23,8 @@ class AuthService:
         existing = await self.user_repo.get_by_email(data.email)
         if existing:
             raise AlreadyExistsError("کاربری با این ایمیل قبلاً ثبت‌نام کرده است")
+        if data.phone_number and await self.user_repo.get_by_phone(data.phone_number):
+            raise AlreadyExistsError("این شماره موبایل قبلاً برای حساب دیگری ثبت شده است")
 
         user = await self.user_repo.create(
             full_name=data.full_name,

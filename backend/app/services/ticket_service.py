@@ -58,6 +58,15 @@ class TicketService:
                 target_type="ticket",
                 target_id=ticket_id,
             )
+        else:
+            await self.log_service.log(
+                CATEGORY_TICKET,
+                "ticket_customer_reply",
+                f"مشتری به تیکت «{ticket.subject}» پاسخ داد",
+                actor_id=sender_id,
+                target_type="ticket",
+                target_id=ticket_id,
+            )
         await self.db.commit()
         return await self.repo.get(ticket_id)
 
