@@ -21,23 +21,31 @@ manage the same backend).
 
 ```
 src/
-  api/          # One typed module per backend domain (products.ts, orders.ts, ...).
-                # Every function returns a typed Promise — this is the ONLY place
-                # that knows about HTTP/axios; pages never call axios directly.
-  types/        # TypeScript interfaces mirroring the backend's Pydantic schemas.
-  store/        # Zustand: authStore (tokens + current user, persisted).
-  layout/       # AdminLayout: sidebar + header shell (Ant Design Layout/Menu).
-  routes/       # ProtectedRoute (redirects to /login if not authenticated/admin).
-  pages/        # One folder per feature — list/detail/form pages, using React Query
-                # hooks (useQuery/useMutation) directly against the api/ layer.
-  components/   # Small shared UI pieces (StatusTag, Money, PageHeader).
-  utils/        # Formatting (toman, dates) and Persian enum label maps.
+  app/
+    providers/  AppProviders = ThemeProvider (antd: RTL, fa locale, tokens, <App>) + QueryProvider.
+    router/     AppRouter (lazy, code-split routes) + ProtectedRoute (login/admin guard).
+    store/      Zustand authStore (tokens + current user, persisted).
+  assets/       styles/globals.css.
+  components/   layout/ (AdminLayout: sidebar + header) and ui/ (PageHeader, StatusTag, Money, PageFallback).
+  features/     One folder per domain (products, orders, brands, wallet, tickets, logs, notifications, ...):
+    <feature>/
+      services/ The ONLY place that knows about HTTP — typed calls on the shared axios instance.
+      hooks/    React Query hooks (query keys, useQuery/useMutation + cache invalidation).
+      pages/    Route components; they only use the feature's hooks.
+      components/ Feature-specific pieces (e.g. ProductImagesCard, NotificationBell).
+      types/    TypeScript interfaces mirroring the backend's Pydantic schemas.
+  services/     apiClient.ts (axios + JWT refresh), queryClient.ts (global error toast), message.ts.
+  types/        Shared types (Page<T>).
+  utils/        Formatting (toman, Jalali dates), Persian enum labels, JWT helpers.
 ```
 
-Data flow for any page: `page component → useQuery/useMutation → api/<domain>.ts → axios (api/client.ts) → FastAPI`.
+Data flow for any page: `page → features/<x>/hooks (React Query) → features/<x>/services → axios (services/apiClient.ts) → FastAPI`.
 The axios instance auto-attaches the JWT and transparently refreshes it once on a 401
 before retrying the original request; if refresh also fails, it logs out and redirects
-to `/login`.
+to `/login`. Failed mutations show an error toast centrally (`services/queryClient.ts`),
+so pages only handle the success path. `@/` is an alias for `src/`.
+
+The dev server proxies `/api` and `/static` to `VITE_PROXY_TARGET` (default `http://localhost:8000`).
 
 ## Authentication
 

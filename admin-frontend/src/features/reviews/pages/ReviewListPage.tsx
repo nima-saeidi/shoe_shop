@@ -1,39 +1,22 @@
 import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Popconfirm, Rate, Table, Tag, message } from 'antd'
+import { Button, Popconfirm, Rate, Table, Tag } from 'antd'
 import { CheckOutlined, DeleteOutlined, EyeInvisibleOutlined } from '@ant-design/icons'
-import { deleteReview, listReviews, moderateReview } from '../../api/reviews'
-import { getApiErrorMessage } from '../../api/client'
-import { PageHeader } from '../../components/PageHeader'
-import type { Review } from '../../types'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { useDeleteReview, useModerateReview, useReviews } from '../hooks/useReviews'
+import type { Review } from '../types'
+import { message } from '@/services/message'
 
 export function ReviewListPage() {
-  const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
 
-  const { data, isLoading } = useQuery({ queryKey: ['reviews', page], queryFn: () => listReviews(page, 20) })
-
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['reviews'] })
-
-  const moderateMutation = useMutation({
-    mutationFn: ({ id, approved }: { id: number; approved: boolean }) => moderateReview(id, approved),
-    onSuccess: invalidate,
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteReview,
-    onSuccess: () => {
-      message.success('نظر حذف شد')
-      invalidate()
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
+  const { data, isLoading } = useReviews(page)
+  const moderateMutation = useModerateReview()
+  const deleteMutation = useDeleteReview()
 
   const columns = [
     { title: 'محصول', dataIndex: 'product_name' },
     { title: 'کاربر', dataIndex: 'customer_name' },
-    { title: 'امتیاز', dataIndex: 'rating', render: (v: number) => <Rate disabled defaultValue={v} /> },
+    { title: 'امتیاز', dataIndex: 'rating', render: (v: number) => <Rate disabled value={v} /> },
     { title: 'متن نظر', dataIndex: 'comment', render: (v: string | null) => v ?? '-' },
     {
       title: 'وضعیت',
@@ -50,7 +33,10 @@ export function ReviewListPage() {
           ) : (
             <Button type="text" icon={<EyeInvisibleOutlined />} onClick={() => moderateMutation.mutate({ id: record.id, approved: false })} />
           )}
-          <Popconfirm title="این نظر حذف شود؟" onConfirm={() => deleteMutation.mutate(record.id)}>
+          <Popconfirm
+            title="این نظر حذف شود؟"
+            onConfirm={() => deleteMutation.mutate(record.id, { onSuccess: () => message.success('نظر حذف شد') })}
+          >
             <Button type="text" danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </>

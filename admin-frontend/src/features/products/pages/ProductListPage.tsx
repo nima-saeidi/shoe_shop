@@ -1,33 +1,20 @@
 import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Image, Input, Popconfirm, Table, Tag, message } from 'antd'
+import { Button, Image, Input, Popconfirm, Table, Tag } from 'antd'
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
 import { Link, useNavigate } from 'react-router-dom'
-import { deleteProduct, listProducts } from '../../api/products'
-import { getApiErrorMessage } from '../../api/client'
-import { PageHeader } from '../../components/PageHeader'
-import { Money } from '../../components/Money'
-import type { Product } from '../../types'
+import { Money } from '@/components/ui/Money'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { useDeleteProduct, useProducts } from '../hooks/useProducts'
+import type { Product } from '../types'
+import { message } from '@/services/message'
 
 export function ProductListPage() {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
   const [q, setQ] = useState('')
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['products', page, q],
-    queryFn: () => listProducts({ page, page_size: 20, q: q || undefined }),
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteProduct,
-    onSuccess: () => {
-      message.success('محصول حذف شد')
-      queryClient.invalidateQueries({ queryKey: ['products'] })
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
+  const { data, isLoading } = useProducts({ page, page_size: 20, q: q || undefined })
+  const deleteMutation = useDeleteProduct()
 
   const columns = [
     {
@@ -80,7 +67,10 @@ export function ProductListPage() {
       render: (_: unknown, record: Product) => (
         <>
           <Button type="text" icon={<EditOutlined />} onClick={() => navigate(`/products/${record.id}/edit`)} />
-          <Popconfirm title="این محصول حذف شود؟" onConfirm={() => deleteMutation.mutate(record.id)}>
+          <Popconfirm
+            title="این محصول حذف شود؟"
+            onConfirm={() => deleteMutation.mutate(record.id, { onSuccess: () => message.success('محصول حذف شد') })}
+          >
             <Button type="text" danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </>

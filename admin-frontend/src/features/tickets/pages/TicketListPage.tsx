@@ -1,17 +1,16 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { Button, Select, Table } from 'antd'
 import { Link } from 'react-router-dom'
-import { listTickets } from '../../api/tickets'
-import { PageHeader } from '../../components/PageHeader'
-import { StatusTag } from '../../components/StatusTag'
-import { TICKET_STATUS_FA } from '../../utils/enums'
-import { formatDateTime } from '../../utils/format'
-import type { Ticket } from '../../types'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { StatusTag } from '@/components/ui/StatusTag'
+import { TICKET_STATUS_FA } from '@/utils/enums'
+import { formatDateTime } from '@/utils/format'
+import { useTickets } from '../hooks/useTickets'
+import type { Ticket } from '../types'
 
 export function TicketListPage() {
   const [status, setStatus] = useState<string | undefined>()
-  const { data, isLoading } = useQuery({ queryKey: ['tickets', status], queryFn: () => listTickets(status) })
+  const { data, isLoading } = useTickets(status)
 
   const columns = [
     { title: 'موضوع', dataIndex: 'subject' },

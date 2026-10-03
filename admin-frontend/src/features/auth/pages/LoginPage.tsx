@@ -1,41 +1,22 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Alert, Button, Card, Form, Input, Typography } from 'antd'
 import { LockOutlined, UserOutlined } from '@ant-design/icons'
-import { getCurrentUser, login } from '../../api/auth'
-import { getApiErrorMessage } from '../../api/client'
-import { useAuthStore } from '../../store/authStore'
-
-interface LoginFormValues {
-  email: string
-  password: string
-}
+import { getApiErrorMessage } from '@/services/apiClient'
+import { NotAdminError, useLogin } from '../hooks/useLogin'
+import type { LoginInput } from '../types'
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const { setTokens, setUser } = useAuthStore()
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const login = useLogin()
 
-  async function onFinish(values: LoginFormValues) {
-    setError(null)
-    setLoading(true)
-    try {
-      const tokens = await login(values.email, values.password)
-      setTokens(tokens.access_token, tokens.refresh_token)
-      const user = await getCurrentUser()
-      if (user.role !== 'admin' && user.role !== 'superadmin') {
-        setError('این حساب دسترسی ادمین ندارد.')
-        useAuthStore.getState().logout()
-        return
-      }
-      setUser(user)
-      navigate('/')
-    } catch (err) {
-      setError(getApiErrorMessage(err, 'ایمیل یا رمز عبور اشتباه است'))
-    } finally {
-      setLoading(false)
-    }
+  const error = login.error
+    ? login.error instanceof NotAdminError
+      ? login.error.message
+      : getApiErrorMessage(login.error, 'ایمیل یا رمز عبور اشتباه است')
+    : null
+
+  function onFinish(values: LoginInput) {
+    login.mutate(values, { onSuccess: () => navigate('/') })
   }
 
   return (
@@ -49,14 +30,14 @@ export function LoginPage() {
         background: 'linear-gradient(135deg, #4f46e5, #3730a3)',
       }}
     >
-      <Card style={{ width: 380, maxWidth: "100%", borderRadius: 16 }}>
+      <Card style={{ width: 380, maxWidth: '100%', borderRadius: 16 }}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <div style={{ fontSize: 32 }}>👞</div>
           <Typography.Title level={4} style={{ margin: '8px 0 0' }}>
             پنل مدیریت فروشگاه کفش
           </Typography.Title>
         </div>
-        {error && <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />}
+        {error && <Alert type="error" title={error} showIcon style={{ marginBottom: 16 }} />}
         <Form layout="vertical" onFinish={onFinish} autoComplete="off">
           <Form.Item name="email" label="ایمیل" rules={[{ required: true, message: 'ایمیل را وارد کنید' }]}>
             <Input prefix={<UserOutlined />} dir="ltr" autoFocus />
@@ -65,7 +46,7 @@ export function LoginPage() {
             <Input.Password prefix={<LockOutlined />} dir="ltr" />
           </Form.Item>
           <Form.Item style={{ marginBottom: 0 }}>
-            <Button type="primary" htmlType="submit" block loading={loading}>
+            <Button type="primary" htmlType="submit" block loading={login.isPending}>
               ورود
             </Button>
           </Form.Item>

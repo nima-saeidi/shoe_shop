@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query'
 import { Card, Col, Row, Statistic, Table, Tag } from 'antd'
 import {
   BellOutlined,
@@ -8,16 +7,16 @@ import {
   WalletOutlined,
 } from '@ant-design/icons'
 import { Link } from 'react-router-dom'
-import { getDashboardStats } from '../../api/dashboard'
-import { PageHeader } from '../../components/PageHeader'
-import { StatusTag } from '../../components/StatusTag'
-import { Money } from '../../components/Money'
-import { ORDER_STATUS_FA } from '../../utils/enums'
-import { formatDate } from '../../utils/format'
-import type { Order } from '../../types'
+import { Money } from '@/components/ui/Money'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { StatusTag } from '@/components/ui/StatusTag'
+import type { Order } from '@/features/orders/types'
+import { ORDER_STATUS_FA } from '@/utils/enums'
+import { formatDate } from '@/utils/format'
+import { useDashboardStats } from '../hooks/useDashboard'
 
 export function DashboardPage() {
-  const { data, isLoading } = useQuery({ queryKey: ['dashboard'], queryFn: getDashboardStats })
+  const { data, isLoading } = useDashboardStats()
 
   const columns = [
     {
@@ -73,7 +72,7 @@ export function DashboardPage() {
                 title="درخواست‌های عمده در انتظار بررسی"
                 value={data?.pending_wholesale ?? 0}
                 prefix={<BellOutlined />}
-                valueStyle={{ color: '#d48806' }}
+                styles={{ content: { color: '#d48806' } }}
               />
             </Card>
           </Link>
@@ -85,7 +84,7 @@ export function DashboardPage() {
                 title="اقلام با موجودی کم"
                 value={data?.low_stock_count ?? 0}
                 prefix={<ExclamationCircleOutlined />}
-                valueStyle={{ color: '#cf1322' }}
+                styles={{ content: { color: '#cf1322' } }}
               />
             </Card>
           </Link>

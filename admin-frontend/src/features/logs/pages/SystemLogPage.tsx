@@ -1,18 +1,17 @@
-import { useQuery } from '@tanstack/react-query'
 import { Button, Card } from 'antd'
 import { ReloadOutlined } from '@ant-design/icons'
-import { getSystemLog } from '../../api/logs'
-import { PageHeader } from '../../components/PageHeader'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { useSystemLog } from '../hooks/useLogs'
 
 export function SystemLogPage() {
-  const { data, isLoading, refetch } = useQuery({ queryKey: ['system-log'], queryFn: () => getSystemLog(300) })
+  const { data, isFetching, refetch } = useSystemLog(300)
 
   return (
     <div>
       <PageHeader
         title="لاگ خام سرور (فنی)"
         extra={
-          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isLoading}>
+          <Button icon={<ReloadOutlined />} onClick={() => refetch()} loading={isFetching}>
             بروزرسانی
           </Button>
         }
@@ -35,7 +34,7 @@ export function SystemLogPage() {
             borderRadius: 8,
           }}
         >
-          {(data ?? []).length ? data!.join('') : '(هنوز رویدادی ثبت نشده است)'}
+          {data?.length ? data.join('') : '(هنوز رویدادی ثبت نشده است)'}
         </pre>
       </Card>
     </div>

@@ -1,12 +1,13 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { Button, DatePicker, Input, Select, Table } from 'antd'
 import { Link } from 'react-router-dom'
-import { listLogCategories, listLogs } from '../../api/logs'
-import { PageHeader } from '../../components/PageHeader'
-import { StatusTag } from '../../components/StatusTag'
-import { LOG_CATEGORY_FA, LOG_LEVEL_FA } from '../../utils/enums'
-import { formatDateTime } from '../../utils/format'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { StatusTag } from '@/components/ui/StatusTag'
+import { LOG_CATEGORY_FA, LOG_LEVEL_FA } from '@/utils/enums'
+import { formatDateTime } from '@/utils/format'
+import { useLogCategories, useLogs } from '../hooks/useLogs'
+
+const PAGE_SIZE = 50
 
 export function LogListPage() {
   const [page, setPage] = useState(1)
@@ -15,20 +16,24 @@ export function LogListPage() {
   const [q, setQ] = useState<string | undefined>()
   const [dateRange, setDateRange] = useState<[string, string] | undefined>()
 
-  const { data: categories } = useQuery({ queryKey: ['log-categories'], queryFn: listLogCategories })
-  const { data, isLoading } = useQuery({
-    queryKey: ['logs', page, category, level, q, dateRange],
-    queryFn: () =>
-      listLogs({
-        page,
-        page_size: 50,
-        category,
-        level,
-        q,
-        date_from: dateRange?.[0],
-        date_to: dateRange?.[1],
-      }),
+  const { data: categories } = useLogCategories()
+  const { data, isLoading } = useLogs({
+    page,
+    page_size: PAGE_SIZE,
+    category,
+    level,
+    q,
+    date_from: dateRange?.[0],
+    date_to: dateRange?.[1],
   })
+
+  // Any filter change starts again from the first page.
+  const filter =
+    <T,>(setter: (value: T) => void) =>
+    (value: T) => {
+      setPage(1)
+      setter(value)
+    }
 
   const columns = [
     { title: 'زمان', dataIndex: 'created_at', render: (v: string) => formatDateTime(v) },
@@ -55,7 +60,7 @@ export function LogListPage() {
           placeholder="همه دسته‌ها"
           style={{ width: 180 }}
           value={category}
-          onChange={setCategory}
+          onChange={filter(setCategory)}
           options={(categories ?? []).map((c) => ({ value: c, label: LOG_CATEGORY_FA[c] ?? c }))}
         />
         <Select
@@ -63,17 +68,18 @@ export function LogListPage() {
           placeholder="همه سطوح"
           style={{ width: 150 }}
           value={level}
-          onChange={setLevel}
+          onChange={filter(setLevel)}
           options={[
             { value: 'info', label: 'اطلاعات' },
             { value: 'warning', label: 'هشدار' },
             { value: 'error', label: 'خطا' },
           ]}
         />
-        <Input.Search placeholder="جستجو در پیام..." style={{ width: 240 }} onSearch={setQ} allowClear />
+        <Input.Search placeholder="جستجو در پیام..." style={{ width: 240 }} onSearch={filter(setQ)} allowClear />
         <DatePicker.RangePicker
           showTime
           onChange={(values) => {
+            setPage(1)
             if (!values || !values[0] || !values[1]) {
               setDateRange(undefined)
               return
@@ -88,7 +94,7 @@ export function LogListPage() {
         dataSource={data?.items ?? []}
         columns={columns}
         size="small"
-        pagination={{ current: page, pageSize: 50, total: data?.total ?? 0, onChange: setPage, showSizeChanger: false }}
+        pagination={{ current: page, pageSize: PAGE_SIZE, total: data?.total ?? 0, onChange: setPage, showSizeChanger: false }}
       />
     </div>
   )

@@ -1,30 +1,24 @@
 import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Select, Table, Tag, message } from 'antd'
+import { Button, Select, Table, Tag } from 'antd'
 import { Link } from 'react-router-dom'
-import { listUsers, updateUser } from '../../api/users'
-import { getApiErrorMessage } from '../../api/client'
-import { PageHeader } from '../../components/PageHeader'
-import { Money } from '../../components/Money'
-import { ROLE_FA } from '../../utils/enums'
-import type { AdminUser, UserRole } from '../../types'
+import { Money } from '@/components/ui/Money'
+import { PageHeader } from '@/components/ui/PageHeader'
+import type { UserRole } from '@/features/auth/types'
+import { ROLE_FA } from '@/utils/enums'
+import { useUpdateUser, useUsers } from '../hooks/useUsers'
+import type { AdminUser, AdminUserUpdateInput } from '../types'
+import { message } from '@/services/message'
 
 const ROLES: UserRole[] = ['customer', 'wholesale', 'admin', 'superadmin']
 
 export function UserListPage() {
-  const queryClient = useQueryClient()
   const [page, setPage] = useState(1)
 
-  const { data, isLoading } = useQuery({ queryKey: ['users', page], queryFn: () => listUsers(page, 20) })
+  const { data, isLoading } = useUsers(page)
+  const updateMutation = useUpdateUser()
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, input }: { id: number; input: { role?: UserRole; is_active?: boolean } }) => updateUser(id, input),
-    onSuccess: () => {
-      message.success('کاربر به‌روزرسانی شد')
-      queryClient.invalidateQueries({ queryKey: ['users'] })
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
+  const update = (id: number, input: AdminUserUpdateInput) =>
+    updateMutation.mutate({ id, input }, { onSuccess: () => message.success('کاربر به‌روزرسانی شد') })
 
   const columns = [
     {
@@ -47,12 +41,20 @@ export function UserListPage() {
           size="small"
           value={role}
           style={{ width: 140 }}
-          onChange={(value) => updateMutation.mutate({ id: record.id, input: { role: value } })}
+          onChange={(value) => update(record.id, { role: value })}
           options={ROLES.map((r) => ({ value: r, label: ROLE_FA[r] }))}
         />
       ),
     },
-    { title: 'کیف پول', dataIndex: 'wallet_balance', render: (v: number, record: AdminUser) => <Link to={`/wallet/${record.id}`}><Money value={v} /></Link> },
+    {
+      title: 'کیف پول',
+      dataIndex: 'wallet_balance',
+      render: (v: number, record: AdminUser) => (
+        <Link to={`/wallet/${record.id}`}>
+          <Money value={v} />
+        </Link>
+      ),
+    },
     {
       title: 'وضعیت',
       dataIndex: 'is_active',
@@ -62,7 +64,7 @@ export function UserListPage() {
       title: '',
       key: 'actions',
       render: (_: unknown, record: AdminUser) => (
-        <Button size="small" onClick={() => updateMutation.mutate({ id: record.id, input: { is_active: !record.is_active } })}>
+        <Button size="small" onClick={() => update(record.id, { is_active: !record.is_active })}>
           {record.is_active ? 'غیرفعال‌سازی' : 'فعال‌سازی'}
         </Button>
       ),

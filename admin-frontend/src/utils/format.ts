@@ -1,8 +1,4 @@
-import dayjs from 'dayjs'
-import 'dayjs/locale/fa'
-import jalliPlugin from 'jalali-plugin-dayjs'
-
-dayjs.extend(jalliPlugin)
+import dayjs from './dayjs'
 
 export function formatToman(value: number | null | undefined): string {
   if (value === null || value === undefined || Number.isNaN(value)) return '0'

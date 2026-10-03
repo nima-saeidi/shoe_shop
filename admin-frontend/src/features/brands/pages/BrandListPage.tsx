@@ -1,69 +1,23 @@
 import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Avatar, Button, Form, Input, Modal, Popconfirm, Switch, Table, Upload, message } from 'antd'
+import { Avatar, Button, Form, Input, Modal, Popconfirm, Switch, Table, Upload } from 'antd'
 import type { UploadFile, UploadProps } from 'antd'
 import { DeleteOutlined, EditOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons'
-import { createBrand, deleteBrand, listBrands, updateBrand, uploadBrandLogo } from '../../api/brands'
-import { getApiErrorMessage } from '../../api/client'
-import { PageHeader } from '../../components/PageHeader'
-import type { Brand, BrandInput } from '../../types'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { useBrands, useCreateBrand, useDeleteBrand, useUpdateBrand, useUploadBrandLogo } from '../hooks/useBrands'
+import type { Brand, BrandInput } from '../types'
+import { message } from '@/services/message'
 
 export function BrandListPage() {
-  const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Brand | null>(null)
   const [form] = Form.useForm<BrandInput>()
   const [logoFiles, setLogoFiles] = useState<UploadFile[]>([])
 
-  const { data, isLoading } = useQuery({ queryKey: ['brands'], queryFn: () => listBrands(1, 200) })
-
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['brands'] })
-
-  const createMutation = useMutation({
-    mutationFn: async ({ input, file }: { input: BrandInput; file?: File }) => {
-      const brand = await createBrand(input)
-      if (file) await uploadBrandLogo(brand.id, file)
-      return brand
-    },
-    onSuccess: () => {
-      message.success('برند با موفقیت ایجاد شد')
-      invalidate()
-      closeModal()
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, input, file }: { id: number; input: Partial<BrandInput>; file?: File }) => {
-      const brand = await updateBrand(id, input)
-      if (file) await uploadBrandLogo(id, file)
-      return brand
-    },
-    onSuccess: () => {
-      message.success('برند به‌روزرسانی شد')
-      invalidate()
-      closeModal()
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteBrand,
-    onSuccess: () => {
-      message.success('برند حذف شد')
-      invalidate()
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
-
-  const logoMutation = useMutation({
-    mutationFn: ({ id, file }: { id: number; file: File }) => uploadBrandLogo(id, file),
-    onSuccess: () => {
-      message.success('لوگو آپلود شد')
-      invalidate()
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
+  const { data, isLoading } = useBrands()
+  const createMutation = useCreateBrand()
+  const updateMutation = useUpdateBrand()
+  const deleteMutation = useDeleteBrand()
+  const logoMutation = useUploadBrandLogo()
 
   function openCreate() {
     setEditing(null)
@@ -89,9 +43,25 @@ export function BrandListPage() {
     const file = logoFiles[0]?.originFileObj
     const input = { name: values.name, is_active: values.is_active }
     if (editing) {
-      updateMutation.mutate({ id: editing.id, input, file })
+      updateMutation.mutate(
+        { id: editing.id, input, file },
+        {
+          onSuccess: () => {
+            message.success('برند به‌روزرسانی شد')
+            closeModal()
+          },
+        },
+      )
     } else {
-      createMutation.mutate({ input, file })
+      createMutation.mutate(
+        { input, file },
+        {
+          onSuccess: () => {
+            message.success('برند با موفقیت ایجاد شد')
+            closeModal()
+          },
+        },
+      )
     }
   }
 
@@ -116,12 +86,18 @@ export function BrandListPage() {
           <Upload
             showUploadList={false}
             accept="image/*"
-            customRequest={(({ file }) => logoMutation.mutate({ id: record.id, file: file as File })) as UploadProps['customRequest']}
+            customRequest={
+              (({ file }) =>
+                logoMutation.mutate({ id: record.id, file: file as File }, { onSuccess: () => message.success('لوگو آپلود شد') })) as UploadProps['customRequest']
+            }
           >
             <Button type="text" icon={<UploadOutlined />} title="آپلود لوگو" />
           </Upload>
           <Button type="text" icon={<EditOutlined />} onClick={() => openEdit(record)} />
-          <Popconfirm title="این برند حذف شود؟" onConfirm={() => deleteMutation.mutate(record.id)}>
+          <Popconfirm
+            title="این برند حذف شود؟"
+            onConfirm={() => deleteMutation.mutate(record.id, { onSuccess: () => message.success('برند حذف شد') })}
+          >
             <Button type="text" danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </>

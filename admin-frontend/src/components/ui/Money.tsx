@@ -1,4 +1,4 @@
-import { formatToman } from '../utils/format'
+import { formatToman } from '@/utils/format'
 
 export function Money({ value, suffix = ' تومان' }: { value: number | null | undefined; suffix?: string }) {
   return (

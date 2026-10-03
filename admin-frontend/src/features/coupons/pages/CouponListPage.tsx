@@ -1,54 +1,35 @@
 import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, DatePicker, Form, Input, InputNumber, Modal, Popconfirm, Select, Switch, Table, Tag, message } from 'antd'
+import { Button, DatePicker, Form, Input, InputNumber, Modal, Popconfirm, Select, Switch, Table, Tag } from 'antd'
 import { DeleteOutlined, PlusOutlined, PoweroffOutlined } from '@ant-design/icons'
-import dayjs from 'dayjs'
-import { createCoupon, deleteCoupon, listCoupons, updateCoupon } from '../../api/coupons'
-import { getApiErrorMessage } from '../../api/client'
-import { PageHeader } from '../../components/PageHeader'
-import { Money } from '../../components/Money'
-import { DISCOUNT_TYPE_FA } from '../../utils/enums'
-import type { Coupon, CouponInput } from '../../types'
+import type { Dayjs } from 'dayjs'
+import { Money } from '@/components/ui/Money'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { DISCOUNT_TYPE_FA } from '@/utils/enums'
+import { useCoupons, useCreateCoupon, useDeleteCoupon, useToggleCoupon } from '../hooks/useCoupons'
+import type { Coupon, CouponInput, DiscountType } from '../types'
+import { message } from '@/services/message'
+
+interface CouponFormValues {
+  code: string
+  discount_type: DiscountType
+  discount_value: number
+  min_order_amount?: number
+  max_uses?: number | null
+  is_active?: boolean
+  valid_from?: Dayjs | null
+  valid_until?: Dayjs | null
+}
 
 export function CouponListPage() {
-  const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
-  const [form] = Form.useForm()
+  const [form] = Form.useForm<CouponFormValues>()
 
-  const { data, isLoading } = useQuery({ queryKey: ['coupons'], queryFn: () => listCoupons(1, 100) })
+  const { data, isLoading } = useCoupons()
+  const createMutation = useCreateCoupon()
+  const toggleMutation = useToggleCoupon()
+  const deleteMutation = useDeleteCoupon()
 
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['coupons'] })
-
-  const createMutation = useMutation({
-    mutationFn: createCoupon,
-    onSuccess: () => {
-      message.success('کد تخفیف با موفقیت ایجاد شد')
-      invalidate()
-      setModalOpen(false)
-      form.resetFields()
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
-
-  const toggleMutation = useMutation({
-    mutationFn: (coupon: Coupon) => updateCoupon(coupon.id, { is_active: !coupon.is_active }),
-    onSuccess: () => {
-      message.success('وضعیت کد تخفیف به‌روزرسانی شد')
-      invalidate()
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteCoupon,
-    onSuccess: () => {
-      message.success('کد تخفیف حذف شد')
-      invalidate()
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
-
-  function handleSubmit(values: any) {
+  function handleSubmit(values: CouponFormValues) {
     const input: CouponInput = {
       code: values.code,
       discount_type: values.discount_type,
@@ -56,10 +37,16 @@ export function CouponListPage() {
       min_order_amount: values.min_order_amount ?? 0,
       max_uses: values.max_uses || undefined,
       is_active: values.is_active ?? true,
-      valid_from: values.valid_from ? dayjs(values.valid_from).toISOString() : undefined,
-      valid_until: values.valid_until ? dayjs(values.valid_until).toISOString() : undefined,
+      valid_from: values.valid_from ? values.valid_from.toISOString() : undefined,
+      valid_until: values.valid_until ? values.valid_until.toISOString() : undefined,
     }
-    createMutation.mutate(input)
+    createMutation.mutate(input, {
+      onSuccess: () => {
+        message.success('کد تخفیف با موفقیت ایجاد شد')
+        setModalOpen(false)
+        form.resetFields()
+      },
+    })
   }
 
   const columns = [
@@ -85,8 +72,15 @@ export function CouponListPage() {
       key: 'actions',
       render: (_: unknown, record: Coupon) => (
         <>
-          <Button type="text" icon={<PoweroffOutlined />} onClick={() => toggleMutation.mutate(record)} />
-          <Popconfirm title="این کد تخفیف حذف شود؟" onConfirm={() => deleteMutation.mutate(record.id)}>
+          <Button
+            type="text"
+            icon={<PoweroffOutlined />}
+            onClick={() => toggleMutation.mutate(record, { onSuccess: () => message.success('وضعیت کد تخفیف به‌روزرسانی شد') })}
+          />
+          <Popconfirm
+            title="این کد تخفیف حذف شود؟"
+            onConfirm={() => deleteMutation.mutate(record.id, { onSuccess: () => message.success('کد تخفیف حذف شد') })}
+          >
             <Button type="text" danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </>

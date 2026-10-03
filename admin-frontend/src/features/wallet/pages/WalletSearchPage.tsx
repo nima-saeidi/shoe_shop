@@ -1,20 +1,14 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { Input, Table } from 'antd'
 import { Link } from 'react-router-dom'
-import { searchWalletUsers } from '../../api/wallet'
-import { PageHeader } from '../../components/PageHeader'
-import { Money } from '../../components/Money'
-import type { WalletUserSummary } from '../../types'
+import { Money } from '@/components/ui/Money'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { useWalletUserSearch } from '../hooks/useWallet'
+import type { WalletUserSummary } from '../types'
 
 export function WalletSearchPage() {
   const [q, setQ] = useState('')
-
-  const { data, isFetching } = useQuery({
-    queryKey: ['wallet-search', q],
-    queryFn: () => searchWalletUsers(q),
-    enabled: q.length > 1,
-  })
+  const { data, isFetching } = useWalletUserSearch(q)
 
   const columns = [
     { title: 'نام', dataIndex: 'full_name' },

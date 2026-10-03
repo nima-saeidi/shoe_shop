@@ -1,11 +1,13 @@
-import { apiClient } from './client'
+import { apiClient } from '@/services/apiClient'
 import type { WholesaleRequest } from '../types'
 
-export async function listWholesaleRequests(status = 'pending'): Promise<WholesaleRequest[]> {
-  const { data } = await apiClient.get<WholesaleRequest[]>('/wholesale', { params: { status, page_size: 100 } })
-  return data
-}
+export const wholesaleService = {
+  async list(status = 'pending'): Promise<WholesaleRequest[]> {
+    const { data } = await apiClient.get<WholesaleRequest[]>('/wholesale', { params: { status, page_size: 100 } })
+    return data
+  },
 
-export async function decideWholesaleRequest(userId: number, approve: boolean): Promise<void> {
-  await apiClient.post(`/wholesale/${userId}/decision`, { approve })
+  async decide(userId: number, approve: boolean): Promise<void> {
+    await apiClient.post(`/wholesale/${userId}/decision`, { approve })
+  },
 }

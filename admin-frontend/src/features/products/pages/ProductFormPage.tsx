@@ -1,65 +1,65 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  Button,
-  Card,
-  Col,
-  Form,
-  Input,
-  InputNumber,
-  Popconfirm,
-  Row,
-  Select,
-  Switch,
-  Table,
-  Tag,
-  Upload,
-  message,
-} from 'antd'
+import { Button, Card, Col, Form, Input, InputNumber, Row, Select, Switch, Upload } from 'antd'
 import type { UploadFile } from 'antd'
-import { DeleteOutlined, StarFilled, StarOutlined, UploadOutlined } from '@ant-design/icons'
-import { listCategories } from '../../api/categories'
-import { listBrands } from '../../api/brands'
-import {
-  addVariant,
-  createProduct,
-  deleteProductImage,
-  deleteVariant,
-  getProduct,
-  setPrimaryImage,
-  updateProduct,
-  uploadProductImages,
-} from '../../api/products'
-import { getApiErrorMessage } from '../../api/client'
-import { PageHeader } from '../../components/PageHeader'
-import { GENDER_FA } from '../../utils/enums'
-import type { ProductInput, ProductUpdateInput, ProductVariant, ProductVariantInput } from '../../types'
+import { UploadOutlined } from '@ant-design/icons'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { useBrands } from '@/features/brands/hooks/useBrands'
+import { useCategories } from '@/features/categories/hooks/useCategories'
+import { GENDER_FA } from '@/utils/enums'
+import { ProductImagesCard } from '../components/ProductImagesCard'
+import { ProductVariantsCard } from '../components/ProductVariantsCard'
+import { useCreateProduct, useProduct, useUpdateProduct } from '../hooks/useProducts'
+import type { ProductInput, ProductUpdateInput, ProductVariantInput } from '../types'
+import { message } from '@/services/message'
 
 const GENDERS = ['unisex', 'men', 'women', 'kids']
+
+/** Form fields: the product fields plus the create-only variant generator inputs. */
+interface ProductFormValues extends Omit<ProductInput, 'variants'> {
+  sizes?: string
+  colors?: string
+  stock_quantity?: number
+}
+
+const splitList = (value?: string) =>
+  (value || '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+
+/** Every size × color combination becomes one variant with the same starting stock. */
+function buildVariants(values: ProductFormValues): ProductVariantInput[] {
+  const sizes = splitList(values.sizes)
+  const colors = splitList(values.colors)
+  const variants: ProductVariantInput[] = []
+  for (const size of sizes.length ? sizes : ['One Size']) {
+    for (const color of colors.length ? colors : ['Default']) {
+      variants.push({ size, color, stock_quantity: values.stock_quantity ?? 0, extra_price: 0 })
+    }
+  }
+  return variants
+}
 
 export function ProductFormPage() {
   const { id } = useParams()
   const isEdit = Boolean(id)
   const productId = id ? Number(id) : undefined
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  const [form] = Form.useForm()
-  const [variantColor, setVariantColor] = useState<string | undefined>()
+  const [form] = Form.useForm<ProductFormValues>()
   const [newImages, setNewImages] = useState<UploadFile[]>([])
 
-  const { data: categories } = useQuery({ queryKey: ['categories'], queryFn: () => listCategories(1, 200) })
-  const { data: brands } = useQuery({ queryKey: ['brands'], queryFn: () => listBrands(1, 200) })
-  const { data: product, isLoading: loadingProduct } = useQuery({
-    queryKey: ['product', productId],
-    queryFn: () => getProduct(productId!),
-    enabled: isEdit,
-  })
+  const { data: categories } = useCategories()
+  const { data: brands } = useBrands()
+  const { data: product, isLoading: loadingProduct } = useProduct(productId)
+  const createMutation = useCreateProduct()
+  const updateMutation = useUpdateProduct(productId ?? 0)
 
   useEffect(() => {
     if (product) {
       form.setFieldsValue({
         name: product.name,
+        sku: product.sku,
         description: product.description ?? '',
         price: product.price,
         discount_price: product.discount_price ?? undefined,
@@ -74,104 +74,26 @@ export function ProductFormPage() {
     }
   }, [product, form])
 
-  const invalidateProduct = () => {
-    queryClient.invalidateQueries({ queryKey: ['product', productId] })
-    queryClient.invalidateQueries({ queryKey: ['products'] })
-  }
-
-  const createMutation = useMutation({
-    mutationFn: async ({ input, files }: { input: ProductInput; files: File[] }) => {
-      const created = await createProduct(input)
-      if (files.length) {
-        try {
-          await uploadProductImages(created.id, files)
-        } catch (err) {
-          message.warning('محصول ایجاد شد اما آپلود تصاویر ناموفق بود: ' + getApiErrorMessage(err))
-        }
-      }
-      return created
-    },
-    onSuccess: (created) => {
-      message.success('محصول با موفقیت ایجاد شد')
-      queryClient.invalidateQueries({ queryKey: ['products'] })
-      navigate(`/products/${created.id}/edit`)
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: (values: ProductUpdateInput) => updateProduct(productId!, values),
-    onSuccess: () => {
-      message.success('محصول با موفقیت به‌روزرسانی شد')
-      invalidateProduct()
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
-
-  const addVariantMutation = useMutation({
-    mutationFn: (values: { size: string; color: string; stock_quantity: number; extra_price: number }) =>
-      addVariant(productId!, values),
-    onSuccess: () => {
-      message.success('ورینت اضافه شد')
-      invalidateProduct()
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
-
-  const deleteVariantMutation = useMutation({
-    mutationFn: deleteVariant,
-    onSuccess: () => {
-      message.success('ورینت حذف شد')
-      invalidateProduct()
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
-
-  const uploadImagesMutation = useMutation({
-    mutationFn: ({ files, color }: { files: File[]; color?: string }) => uploadProductImages(productId!, files, color),
-    onSuccess: (images) => {
-      message.success(`${images.length} تصویر آپلود شد`)
-      invalidateProduct()
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
-
-  const deleteImageMutation = useMutation({
-    mutationFn: deleteProductImage,
-    onSuccess: () => {
-      message.success('تصویر حذف شد')
-      invalidateProduct()
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
-
-  const setPrimaryMutation = useMutation({
-    mutationFn: (imageId: number) => setPrimaryImage(productId!, imageId),
-    onSuccess: () => invalidateProduct(),
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
-
-  function handleSubmit(values: Record<string, any>) {
+  function handleSubmit(values: ProductFormValues) {
     if (isEdit) {
-      // The edit form never renders the sizes/colors/stock_quantity fields, so `values`
-      // already only contains ProductUpdateInput's fields.
-      updateMutation.mutate(values as ProductUpdateInput)
-      return
-    }
-
-    const sizeList = ((values.sizes as string) || '')
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean)
-    const colorList = ((values.colors as string) || '')
-      .split(',')
-      .map((c) => c.trim())
-      .filter(Boolean)
-    const variants: ProductVariantInput[] = []
-    for (const size of sizeList.length ? sizeList : ['One Size']) {
-      for (const color of colorList.length ? colorList : ['Default']) {
-        variants.push({ size, color, stock_quantity: values.stock_quantity ?? 0, extra_price: 0 })
+      // SKU and variants are immutable here (variants are edited in their own card).
+      const update: ProductUpdateInput = {
+        name: values.name,
+        description: values.description,
+        price: values.price,
+        discount_price: values.discount_price,
+        wholesale_price: values.wholesale_price,
+        wholesale_min_qty: values.wholesale_min_qty,
+        gender: values.gender,
+        category_id: values.category_id,
+        brand_id: values.brand_id,
+        is_active: values.is_active,
+        is_featured: values.is_featured,
       }
+      updateMutation.mutate(update, {
+        onSuccess: () => message.success('محصول با موفقیت به‌روزرسانی شد'),
+      })
+      return
     }
 
     const input: ProductInput = {
@@ -187,31 +109,20 @@ export function ProductFormPage() {
       brand_id: values.brand_id,
       is_active: values.is_active,
       is_featured: values.is_featured,
-      variants,
+      variants: buildVariants(values),
     }
-    createMutation.mutate({
-      input,
-      files: newImages.map((f) => f.originFileObj).filter((f): f is NonNullable<typeof f> => Boolean(f)) as File[],
-    })
+    const files = newImages.map((f) => f.originFileObj).filter((f): f is NonNullable<typeof f> => Boolean(f)) as File[]
+    createMutation.mutate(
+      { input, files },
+      {
+        onSuccess: ({ product: created, imageError }) => {
+          if (imageError) message.warning('محصول ایجاد شد اما آپلود تصاویر ناموفق بود: ' + imageError)
+          else message.success('محصول با موفقیت ایجاد شد')
+          navigate(`/products/${created.id}/edit`)
+        },
+      },
+    )
   }
-
-  const variantColumns = [
-    { title: 'سایز', dataIndex: 'size' },
-    { title: 'رنگ', dataIndex: 'color' },
-    { title: 'موجودی', dataIndex: 'stock_quantity' },
-    { title: 'قیمت اضافه', dataIndex: 'extra_price' },
-    {
-      title: '',
-      key: 'actions',
-      render: (_: unknown, record: ProductVariant) => (
-        <Popconfirm title="این ورینت حذف شود؟" onConfirm={() => deleteVariantMutation.mutate(record.id)}>
-          <Button type="text" danger icon={<DeleteOutlined />} />
-        </Popconfirm>
-      ),
-    },
-  ]
-
-  const colorOptions = Array.from(new Set((product?.variants ?? []).map((v) => v.color)))
 
   return (
     <div>
@@ -330,91 +241,12 @@ export function ProductFormPage() {
             </Form>
           </Card>
 
-          {isEdit && (
-            <Card title="ورینت‌ها (سایز / رنگ / موجودی)">
-              <Table
-                rowKey="id"
-                dataSource={product?.variants ?? []}
-                columns={variantColumns}
-                pagination={false}
-                size="small"
-                style={{ marginBottom: 16 }}
-              />
-              <Form
-                layout="inline"
-                onFinish={(values) => {
-                  addVariantMutation.mutate(values)
-                }}
-              >
-                <Form.Item name="size" rules={[{ required: true }]}>
-                  <Input placeholder="سایز" />
-                </Form.Item>
-                <Form.Item name="color" rules={[{ required: true }]}>
-                  <Input placeholder="رنگ" />
-                </Form.Item>
-                <Form.Item name="stock_quantity" initialValue={0}>
-                  <InputNumber placeholder="موجودی" />
-                </Form.Item>
-                <Form.Item name="extra_price" initialValue={0}>
-                  <InputNumber placeholder="قیمت اضافه" />
-                </Form.Item>
-                <Form.Item>
-                  <Button htmlType="submit" loading={addVariantMutation.isPending}>
-                    افزودن
-                  </Button>
-                </Form.Item>
-              </Form>
-            </Card>
-          )}
+          {isEdit && product && <ProductVariantsCard product={product} />}
         </Col>
 
         <Col xs={24} lg={8}>
           {isEdit ? (
-            <Card title="تصاویر (چند طرح/رنگ)">
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(90px, 1fr))', gap: 8, marginBottom: 16 }}>
-                {(product?.images ?? []).map((img) => (
-                  <div key={img.id} style={{ position: 'relative', border: '1px solid #eee', borderRadius: 8, overflow: 'hidden' }}>
-                    <img src={img.image_url} style={{ width: '100%', height: 90, objectFit: 'cover' }} />
-                    {img.color && (
-                      <Tag style={{ position: 'absolute', bottom: 2, insetInlineStart: 2 }}>{img.color}</Tag>
-                    )}
-                    <div style={{ position: 'absolute', top: 2, insetInlineEnd: 2, display: 'flex', gap: 2 }}>
-                      <Button
-                        size="small"
-                        type={img.is_primary ? 'primary' : 'default'}
-                        icon={img.is_primary ? <StarFilled /> : <StarOutlined />}
-                        onClick={() => setPrimaryMutation.mutate(img.id)}
-                      />
-                      <Button size="small" danger icon={<DeleteOutlined />} onClick={() => deleteImageMutation.mutate(img.id)} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <Select
-                allowClear
-                placeholder="مربوط به کدام رنگ است؟ (اختیاری)"
-                style={{ width: '100%', marginBottom: 8 }}
-                value={variantColor}
-                onChange={setVariantColor}
-                options={colorOptions.map((c) => ({ value: c, label: c }))}
-              />
-              <Upload
-                multiple
-                showUploadList={false}
-                accept="image/*"
-                beforeUpload={(_file, fileList) => {
-                  // antd calls this once per file; upload the whole selection in one request.
-                  if (_file === fileList[0]) {
-                    uploadImagesMutation.mutate({ files: fileList as unknown as File[], color: variantColor })
-                  }
-                  return false
-                }}
-              >
-                <Button icon={<UploadOutlined />} loading={uploadImagesMutation.isPending} block>
-                  آپلود عکس‌ها (چندتایی)
-                </Button>
-              </Upload>
-            </Card>
+            product && <ProductImagesCard product={product} />
           ) : (
             <Card>
               <p style={{ color: '#888' }}>برای مدیریت تصاویر و ورینت‌ها، ابتدا محصول را ذخیره کنید.</p>

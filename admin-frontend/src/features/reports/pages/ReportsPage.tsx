@@ -1,12 +1,14 @@
-import { useQuery } from '@tanstack/react-query'
 import { Card, Col, Row, Statistic, Table } from 'antd'
 import { Link } from 'react-router-dom'
-import { getReports } from '../../api/reports'
-import { PageHeader } from '../../components/PageHeader'
-import { Money } from '../../components/Money'
+import { Money } from '@/components/ui/Money'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { useReports } from '../hooks/useReports'
+import type { LowStockVariant } from '../types'
+
+const formatNumber = (v: number | string | undefined) => new Intl.NumberFormat('en-US').format(Number(v))
 
 export function ReportsPage() {
-  const { data, isLoading } = useQuery({ queryKey: ['reports'], queryFn: () => getReports(14) })
+  const { data, isLoading } = useReports(14)
 
   return (
     <div>
@@ -14,20 +16,12 @@ export function ReportsPage() {
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col xs={24} sm={12}>
           <Card loading={isLoading}>
-            <Statistic
-              title="فروش خرد (تومان)"
-              value={data?.revenue_split.retail ?? 0}
-              formatter={(v) => new Intl.NumberFormat('en-US').format(Number(v))}
-            />
+            <Statistic title="فروش خرد (تومان)" value={data?.revenue_split.retail ?? 0} formatter={formatNumber} />
           </Card>
         </Col>
         <Col xs={24} sm={12}>
           <Card loading={isLoading}>
-            <Statistic
-              title="فروش عمده (تومان)"
-              value={data?.revenue_split.wholesale ?? 0}
-              formatter={(v) => new Intl.NumberFormat('en-US').format(Number(v))}
-            />
+            <Statistic title="فروش عمده (تومان)" value={data?.revenue_split.wholesale ?? 0} formatter={formatNumber} />
           </Card>
         </Col>
       </Row>
@@ -58,7 +52,7 @@ export function ReportsPage() {
                 {
                   title: 'محصول',
                   dataIndex: 'product_name',
-                  render: (v: string, record) => <Link to={`/products/${record.product_id}/edit`}>{v}</Link>,
+                  render: (v: string, record: LowStockVariant) => <Link to={`/products/${record.product_id}/edit`}>{v}</Link>,
                 },
                 { title: 'سایز', dataIndex: 'size' },
                 { title: 'رنگ', dataIndex: 'color' },

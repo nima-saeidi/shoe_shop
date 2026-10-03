@@ -1,10 +1,17 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
-import { useAuthStore } from '../store/authStore'
-import { isTokenExpired } from '../utils/jwt'
+import { useAuthStore } from '@/app/store/authStore'
+import { isTokenExpired } from '@/utils/jwt'
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
+/**
+ * The single axios instance of the app. Feature services (features/<name>/services) are the
+ * only callers; components reach the API through React Query hooks, never through axios directly.
+ */
 export const apiClient = axios.create({ baseURL })
+
+/** Largest `page_size` the backend's list endpoints accept (FastAPI `Query(le=100)`). */
+export const MAX_PAGE_SIZE = 100
 
 function isAuthEndpoint(url?: string): boolean {
   return Boolean(url && (url.includes('/auth/login') || url.includes('/auth/refresh')))
@@ -14,33 +21,6 @@ function forceLogout() {
   useAuthStore.getState().logout()
   if (window.location.pathname !== '/login') window.location.href = '/login'
 }
-
-apiClient.interceptors.request.use(async (config) => {
-  if (isAuthEndpoint(config.url)) return config
-
-  let token = useAuthStore.getState().accessToken
-  // Refresh proactively when the access token is expired/about to expire, instead of
-  // sending a request that is guaranteed to bounce with a 401.
-  if (token && isTokenExpired(token, 30_000)) {
-    if (isTokenExpired(useAuthStore.getState().refreshToken)) {
-      forceLogout()
-      return Promise.reject(new axios.Cancel('session expired'))
-    }
-    try {
-      refreshPromise ??= refreshAccessToken().finally(() => {
-        refreshPromise = null
-      })
-      token = await refreshPromise
-    } catch {
-      forceLogout()
-      return Promise.reject(new axios.Cancel('session expired'))
-    }
-  }
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  }
-  return config
-})
 
 // Single-flight refresh: if several requests 401 at once, only one refresh call
 // is made and the rest wait on the same promise.
@@ -57,6 +37,37 @@ async function refreshAccessToken(): Promise<string> {
   useAuthStore.getState().setTokens(response.data.access_token, response.data.refresh_token)
   return response.data.access_token
 }
+
+function getFreshToken(): Promise<string> {
+  refreshPromise ??= refreshAccessToken().finally(() => {
+    refreshPromise = null
+  })
+  return refreshPromise
+}
+
+apiClient.interceptors.request.use(async (config) => {
+  if (isAuthEndpoint(config.url)) return config
+
+  let token = useAuthStore.getState().accessToken
+  // Refresh proactively when the access token is expired/about to expire, instead of
+  // sending a request that is guaranteed to bounce with a 401.
+  if (token && isTokenExpired(token, 30_000)) {
+    if (isTokenExpired(useAuthStore.getState().refreshToken)) {
+      forceLogout()
+      return Promise.reject(new axios.Cancel('session expired'))
+    }
+    try {
+      token = await getFreshToken()
+    } catch {
+      forceLogout()
+      return Promise.reject(new axios.Cancel('session expired'))
+    }
+  }
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+})
 
 interface RetryableConfig extends InternalAxiosRequestConfig {
   _retried?: boolean
@@ -75,10 +86,7 @@ apiClient.interceptors.response.use(
     ) {
       originalRequest._retried = true
       try {
-        refreshPromise ??= refreshAccessToken().finally(() => {
-          refreshPromise = null
-        })
-        const newToken = await refreshPromise
+        const newToken = await getFreshToken()
         originalRequest.headers = originalRequest.headers ?? {}
         originalRequest.headers.Authorization = `Bearer ${newToken}`
         return apiClient(originalRequest)

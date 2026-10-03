@@ -1,41 +1,20 @@
 import { useParams } from 'react-router-dom'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Card, Col, Form, Input, Row, message } from 'antd'
-import { adminReplyTicket, closeTicket, getTicket } from '../../api/tickets'
-import { getApiErrorMessage } from '../../api/client'
-import { PageHeader } from '../../components/PageHeader'
-import { StatusTag } from '../../components/StatusTag'
-import { TICKET_STATUS_FA } from '../../utils/enums'
-import { formatDateTime } from '../../utils/format'
+import { Button, Card, Col, Form, Input, Row } from 'antd'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { StatusTag } from '@/components/ui/StatusTag'
+import { TICKET_STATUS_FA } from '@/utils/enums'
+import { formatDateTime } from '@/utils/format'
+import { useCloseTicket, useReplyTicket, useTicket } from '../hooks/useTickets'
+import { message } from '@/services/message'
 
 export function TicketDetailPage() {
   const { id } = useParams()
   const ticketId = Number(id)
-  const queryClient = useQueryClient()
-  const [form] = Form.useForm()
+  const [form] = Form.useForm<{ message: string }>()
 
-  const { data: ticket, isLoading } = useQuery({ queryKey: ['ticket', ticketId], queryFn: () => getTicket(ticketId) })
-
-  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['ticket', ticketId] })
-
-  const replyMutation = useMutation({
-    mutationFn: (message_: string) => adminReplyTicket(ticketId, message_),
-    onSuccess: () => {
-      message.success('پاسخ ارسال شد')
-      form.resetFields()
-      invalidate()
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
-
-  const closeMutation = useMutation({
-    mutationFn: () => closeTicket(ticketId),
-    onSuccess: () => {
-      message.success('تیکت بسته شد')
-      invalidate()
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
+  const { data: ticket, isLoading } = useTicket(ticketId)
+  const replyMutation = useReplyTicket(ticketId)
+  const closeMutation = useCloseTicket(ticketId)
 
   if (!ticket) return <Card loading={isLoading} />
 
@@ -71,7 +50,17 @@ export function TicketDetailPage() {
               ))}
             </div>
             {ticket.status !== 'closed' && (
-              <Form form={form} onFinish={(values) => replyMutation.mutate(values.message)}>
+              <Form
+                form={form}
+                onFinish={(values) =>
+                  replyMutation.mutate(values.message, {
+                    onSuccess: () => {
+                      message.success('پاسخ ارسال شد')
+                      form.resetFields()
+                    },
+                  })
+                }
+              >
                 <Form.Item name="message" rules={[{ required: true, message: 'پیام را وارد کنید' }]}>
                   <Input.TextArea rows={3} placeholder="پاسخ خود را بنویسید..." />
                 </Form.Item>
@@ -85,7 +74,12 @@ export function TicketDetailPage() {
         <Col xs={24} lg={8}>
           <Card title="عملیات">
             {ticket.status !== 'closed' ? (
-              <Button danger block onClick={() => closeMutation.mutate()} loading={closeMutation.isPending}>
+              <Button
+                danger
+                block
+                onClick={() => closeMutation.mutate(undefined, { onSuccess: () => message.success('تیکت بسته شد') })}
+                loading={closeMutation.isPending}
+              >
                 بستن تیکت
               </Button>
             ) : (

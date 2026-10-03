@@ -18,7 +18,9 @@ import {
   UserOutlined,
   WalletOutlined,
 } from '@ant-design/icons'
-import { useAuthStore } from '../store/authStore'
+import { useQueryClient } from '@tanstack/react-query'
+import { useAuthStore } from '@/app/store/authStore'
+import { NotificationBell } from '@/features/notifications/components/NotificationBell'
 
 const { Sider, Header, Content } = Layout
 
@@ -51,6 +53,7 @@ export function AdminLayout() {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuthStore()
+  const queryClient = useQueryClient()
 
   const selectedKey = useMemo(() => {
     const keys: string[] = []
@@ -106,22 +109,26 @@ export function AdminLayout() {
       <Layout>
         <Header style={{ background: '#fff', padding: broken ? '0 16px 0 56px' : '0 20px', gap: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography.Text strong ellipsis>پنل مدیریت فروشگاه کفش</Typography.Text>
-          <Dropdown
-            menu={{
-              items: [{ key: 'logout', icon: <LogoutOutlined />, label: 'خروج از حساب' }],
-              onClick: ({ key }) => {
-                if (key === 'logout') {
-                  logout()
-                  navigate('/login')
-                }
-              },
-            }}
-          >
-            <Space style={{ cursor: 'pointer' }}>
-              <Avatar icon={<UserOutlined />} />
-              {!broken && <span>{user?.full_name}</span>}
-            </Space>
-          </Dropdown>
+          <Space size="middle">
+            <NotificationBell />
+            <Dropdown
+              menu={{
+                items: [{ key: 'logout', icon: <LogoutOutlined />, label: 'خروج از حساب' }],
+                onClick: ({ key }) => {
+                  if (key === 'logout') {
+                    logout()
+                    queryClient.clear()
+                    navigate('/login')
+                  }
+                },
+              }}
+            >
+              <Space style={{ cursor: 'pointer' }}>
+                <Avatar icon={<UserOutlined />} />
+                {!broken && <span>{user?.full_name}</span>}
+              </Space>
+            </Dropdown>
+          </Space>
         </Header>
         <Content style={{ margin: broken ? 12 : 20, minWidth: 0 }}>
           <Outlet />

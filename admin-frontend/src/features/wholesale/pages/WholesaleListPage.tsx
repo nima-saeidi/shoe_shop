@@ -1,32 +1,22 @@
 import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Select, Table, message } from 'antd'
+import { Button, Select, Table } from 'antd'
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons'
 import { Link } from 'react-router-dom'
-import { decideWholesaleRequest, listWholesaleRequests } from '../../api/wholesale'
-import { getApiErrorMessage } from '../../api/client'
-import { PageHeader } from '../../components/PageHeader'
-import { StatusTag } from '../../components/StatusTag'
-import { WHOLESALE_STATUS_FA } from '../../utils/enums'
-import type { WholesaleRequest } from '../../types'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { StatusTag } from '@/components/ui/StatusTag'
+import { WHOLESALE_STATUS_FA } from '@/utils/enums'
+import { useDecideWholesale, useWholesaleRequests } from '../hooks/useWholesale'
+import type { WholesaleRequest } from '../types'
+import { message } from '@/services/message'
 
 export function WholesaleListPage() {
-  const queryClient = useQueryClient()
   const [status, setStatus] = useState('pending')
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['wholesale-requests', status],
-    queryFn: () => listWholesaleRequests(status),
-  })
+  const { data, isLoading } = useWholesaleRequests(status)
+  const decideMutation = useDecideWholesale()
 
-  const decideMutation = useMutation({
-    mutationFn: ({ userId, approve }: { userId: number; approve: boolean }) => decideWholesaleRequest(userId, approve),
-    onSuccess: () => {
-      message.success('نتیجه ثبت شد')
-      queryClient.invalidateQueries({ queryKey: ['wholesale-requests'] })
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
+  const decide = (userId: number, approve: boolean) =>
+    decideMutation.mutate({ userId, approve }, { onSuccess: () => message.success('نتیجه ثبت شد') })
 
   const columns = [
     { title: 'نام', dataIndex: 'full_name' },
@@ -44,16 +34,10 @@ export function WholesaleListPage() {
       render: (_: unknown, record: WholesaleRequest) =>
         record.wholesale_status === 'pending' ? (
           <>
-            <Button
-              size="small"
-              type="primary"
-              icon={<CheckOutlined />}
-              onClick={() => decideMutation.mutate({ userId: record.id, approve: true })}
-              style={{ marginInlineEnd: 8 }}
-            >
+            <Button size="small" type="primary" icon={<CheckOutlined />} onClick={() => decide(record.id, true)} style={{ marginInlineEnd: 8 }}>
               تایید
             </Button>
-            <Button size="small" danger icon={<CloseOutlined />} onClick={() => decideMutation.mutate({ userId: record.id, approve: false })}>
+            <Button size="small" danger icon={<CloseOutlined />} onClick={() => decide(record.id, false)}>
               رد
             </Button>
           </>

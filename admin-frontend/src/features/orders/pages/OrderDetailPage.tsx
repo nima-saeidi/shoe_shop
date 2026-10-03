@@ -1,26 +1,22 @@
 import { useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Card, Col, Descriptions, Form, Input, Row, Select, Table, Tag, message } from 'antd'
-import { getOrder, updateOrderStatus } from '../../api/orders'
-import { getApiErrorMessage } from '../../api/client'
-import { PageHeader } from '../../components/PageHeader'
-import { StatusTag } from '../../components/StatusTag'
-import { Money } from '../../components/Money'
-import { ORDER_STATUS_FA, ORDER_TYPE_FA, PAYMENT_STATUS_FA } from '../../utils/enums'
-import type { OrderStatusUpdateInput } from '../../types'
-
-const STATUS_OPTIONS = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'returned']
-const PAYMENT_STATUS_OPTIONS = ['pending', 'paid', 'failed', 'refunded']
-const SHIPPING_PROVIDERS = ['پست پیشتاز', 'تیپاکس', 'باربری', 'پیک موتوری', 'سایر']
+import { Button, Card, Col, Descriptions, Form, Input, Row, Select, Table, Tag } from 'antd'
+import { Money } from '@/components/ui/Money'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { StatusTag } from '@/components/ui/StatusTag'
+import { ORDER_STATUS_FA, ORDER_TYPE_FA, PAYMENT_STATUS_FA } from '@/utils/enums'
+import { ORDER_STATUS_OPTIONS, PAYMENT_STATUS_OPTIONS, SHIPPING_PROVIDERS } from '../constants'
+import { useOrder, useUpdateOrderStatus } from '../hooks/useOrders'
+import type { OrderStatusUpdateInput } from '../types'
+import { message } from '@/services/message'
 
 export function OrderDetailPage() {
   const { id } = useParams()
   const orderId = Number(id)
-  const queryClient = useQueryClient()
   const [form] = Form.useForm<OrderStatusUpdateInput>()
 
-  const { data: order, isLoading } = useQuery({ queryKey: ['order', orderId], queryFn: () => getOrder(orderId) })
+  const { data: order, isLoading } = useOrder(orderId)
+  const updateMutation = useUpdateOrderStatus(orderId)
 
   useEffect(() => {
     if (order) {
@@ -32,16 +28,6 @@ export function OrderDetailPage() {
       })
     }
   }, [order, form])
-
-  const updateMutation = useMutation({
-    mutationFn: (values: OrderStatusUpdateInput) => updateOrderStatus(orderId, values),
-    onSuccess: () => {
-      message.success('سفارش با موفقیت به‌روزرسانی شد')
-      queryClient.invalidateQueries({ queryKey: ['order', orderId] })
-      queryClient.invalidateQueries({ queryKey: ['orders'] })
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
 
   if (!order) {
     return <Card loading={isLoading} />
@@ -107,9 +93,13 @@ export function OrderDetailPage() {
 
         <Col xs={24} lg={8}>
           <Card title="به‌روزرسانی سفارش">
-            <Form form={form} layout="vertical" onFinish={(values) => updateMutation.mutate(values)}>
+            <Form
+              form={form}
+              layout="vertical"
+              onFinish={(values) => updateMutation.mutate(values, { onSuccess: () => message.success('سفارش با موفقیت به‌روزرسانی شد') })}
+            >
               <Form.Item name="status" label="وضعیت سفارش">
-                <Select options={STATUS_OPTIONS.map((s) => ({ value: s, label: ORDER_STATUS_FA[s] }))} />
+                <Select options={ORDER_STATUS_OPTIONS.map((s) => ({ value: s, label: ORDER_STATUS_FA[s] }))} />
               </Form.Item>
               <Form.Item name="payment_status" label="وضعیت پرداخت">
                 <Select options={PAYMENT_STATUS_OPTIONS.map((s) => ({ value: s, label: PAYMENT_STATUS_FA[s] }))} />

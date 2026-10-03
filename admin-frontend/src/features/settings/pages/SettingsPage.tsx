@@ -1,10 +1,9 @@
-import { useQuery } from '@tanstack/react-query'
 import { Alert, Card, Col, Descriptions, Row, Tag } from 'antd'
-import { getSettingsStatus } from '../../api/settings'
-import { PageHeader } from '../../components/PageHeader'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { useSettingsStatus } from '../hooks/useSettings'
 
 export function SettingsPage() {
-  const { data, isLoading } = useQuery({ queryKey: ['settings-status'], queryFn: getSettingsStatus })
+  const { data, isLoading } = useSettingsStatus()
 
   return (
     <div>
@@ -30,7 +29,7 @@ export function SettingsPage() {
               style={{ marginTop: 12 }}
               type="info"
               showIcon
-              message="تا زمان اتصال درگاه، پیام‌ها فقط در لاگ سرور ثبت می‌شوند."
+              title="تا زمان اتصال درگاه، پیام‌ها فقط در لاگ سرور ثبت می‌شوند."
             />
           </Card>
         </Col>

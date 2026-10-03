@@ -1,28 +1,21 @@
 import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Select, Table, message } from 'antd'
+import { Button, Select, Table } from 'antd'
 import { Link } from 'react-router-dom'
-import { listReturns, moderateReturn } from '../../api/returns'
-import { getApiErrorMessage } from '../../api/client'
-import { PageHeader } from '../../components/PageHeader'
-import { StatusTag } from '../../components/StatusTag'
-import { RETURN_REASON_FA, RETURN_STATUS_FA } from '../../utils/enums'
-import type { ReturnRequestItem, ReturnStatus } from '../../types'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { StatusTag } from '@/components/ui/StatusTag'
+import { RETURN_REASON_FA, RETURN_STATUS_FA } from '@/utils/enums'
+import { useModerateReturn, useReturns } from '../hooks/useReturns'
+import type { ReturnRequestItem, ReturnStatus } from '../types'
+import { message } from '@/services/message'
 
 export function ReturnListPage() {
-  const queryClient = useQueryClient()
   const [status, setStatus] = useState<string | undefined>()
 
-  const { data, isLoading } = useQuery({ queryKey: ['returns', status], queryFn: () => listReturns(status) })
+  const { data, isLoading } = useReturns(status)
+  const moderateMutation = useModerateReturn()
 
-  const moderateMutation = useMutation({
-    mutationFn: ({ id, newStatus }: { id: number; newStatus: ReturnStatus }) => moderateReturn(id, newStatus),
-    onSuccess: () => {
-      message.success('وضعیت درخواست مرجوعی به‌روزرسانی شد')
-      queryClient.invalidateQueries({ queryKey: ['returns'] })
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
+  const moderate = (id: number, newStatus: ReturnStatus) =>
+    moderateMutation.mutate({ id, status: newStatus }, { onSuccess: () => message.success('وضعیت درخواست مرجوعی به‌روزرسانی شد') })
 
   const columns = [
     {
@@ -45,10 +38,10 @@ export function ReturnListPage() {
         if (record.status === 'pending') {
           return (
             <>
-              <Button size="small" type="primary" onClick={() => moderateMutation.mutate({ id: record.id, newStatus: 'approved' })} style={{ marginInlineEnd: 8 }}>
+              <Button size="small" type="primary" onClick={() => moderate(record.id, 'approved')} style={{ marginInlineEnd: 8 }}>
                 تایید
               </Button>
-              <Button size="small" danger onClick={() => moderateMutation.mutate({ id: record.id, newStatus: 'rejected' })}>
+              <Button size="small" danger onClick={() => moderate(record.id, 'rejected')}>
                 رد
               </Button>
             </>
@@ -56,7 +49,7 @@ export function ReturnListPage() {
         }
         if (record.status === 'approved') {
           return (
-            <Button size="small" type="primary" onClick={() => moderateMutation.mutate({ id: record.id, newStatus: 'completed' })}>
+            <Button size="small" type="primary" onClick={() => moderate(record.id, 'completed')}>
               تکمیل و بازگشت وجه
             </Button>
           )

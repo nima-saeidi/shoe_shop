@@ -1,51 +1,20 @@
 import { useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Form, Input, Modal, Popconfirm, Select, Switch, Table, message } from 'antd'
+import { Button, Form, Input, Modal, Popconfirm, Select, Switch, Table } from 'antd'
 import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
-import { createCategory, deleteCategory, listCategories, updateCategory } from '../../api/categories'
-import { getApiErrorMessage } from '../../api/client'
-import { PageHeader } from '../../components/PageHeader'
-import type { Category, CategoryInput } from '../../types'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { useCategories, useCreateCategory, useDeleteCategory, useUpdateCategory } from '../hooks/useCategories'
+import type { Category, CategoryInput } from '../types'
+import { message } from '@/services/message'
 
 export function CategoryListPage() {
-  const queryClient = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Category | null>(null)
   const [form] = Form.useForm<CategoryInput>()
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['categories'],
-    queryFn: () => listCategories(1, 200),
-  })
-
-  const createMutation = useMutation({
-    mutationFn: createCategory,
-    onSuccess: () => {
-      message.success('دسته‌بندی با موفقیت ایجاد شد')
-      queryClient.invalidateQueries({ queryKey: ['categories'] })
-      closeModal()
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, input }: { id: number; input: Partial<CategoryInput> }) => updateCategory(id, input),
-    onSuccess: () => {
-      message.success('دسته‌بندی به‌روزرسانی شد')
-      queryClient.invalidateQueries({ queryKey: ['categories'] })
-      closeModal()
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteCategory,
-    onSuccess: () => {
-      message.success('دسته‌بندی حذف شد')
-      queryClient.invalidateQueries({ queryKey: ['categories'] })
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
+  const { data, isLoading } = useCategories()
+  const createMutation = useCreateCategory()
+  const updateMutation = useUpdateCategory()
+  const deleteMutation = useDeleteCategory()
 
   function openCreate() {
     setEditing(null)
@@ -72,9 +41,22 @@ export function CategoryListPage() {
 
   function handleSubmit(values: CategoryInput) {
     if (editing) {
-      updateMutation.mutate({ id: editing.id, input: values })
+      updateMutation.mutate(
+        { id: editing.id, input: values },
+        {
+          onSuccess: () => {
+            message.success('دسته‌بندی به‌روزرسانی شد')
+            closeModal()
+          },
+        },
+      )
     } else {
-      createMutation.mutate(values)
+      createMutation.mutate(values, {
+        onSuccess: () => {
+          message.success('دسته‌بندی با موفقیت ایجاد شد')
+          closeModal()
+        },
+      })
     }
   }
 
@@ -99,7 +81,10 @@ export function CategoryListPage() {
       render: (_: unknown, record: Category) => (
         <>
           <Button type="text" icon={<EditOutlined />} onClick={() => openEdit(record)} />
-          <Popconfirm title="این دسته‌بندی حذف شود؟" onConfirm={() => deleteMutation.mutate(record.id)}>
+          <Popconfirm
+            title="این دسته‌بندی حذف شود؟"
+            onConfirm={() => deleteMutation.mutate(record.id, { onSuccess: () => message.success('دسته‌بندی حذف شد') })}
+          >
             <Button type="text" danger icon={<DeleteOutlined />} />
           </Popconfirm>
         </>

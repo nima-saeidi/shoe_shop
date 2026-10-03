@@ -1,29 +1,23 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { Button, Card, Col, Form, Input, InputNumber, Row, Select, Space, message } from 'antd'
+import { Button, Card, Col, Form, Input, InputNumber, Row, Select, Space } from 'antd'
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons'
-import { searchWalletUsers } from '../../api/wallet'
-import { listProducts } from '../../api/products'
-import { createManualOrder } from '../../api/orders'
-import { getApiErrorMessage } from '../../api/client'
-import { PageHeader } from '../../components/PageHeader'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { useProducts } from '@/features/products/hooks/useProducts'
+import { MAX_PAGE_SIZE } from '@/services/apiClient'
+import { useWalletUserSearch } from '@/features/wallet/hooks/useWallet'
+import { useCreateManualOrder } from '../hooks/useOrders'
+import type { ManualOrderInput } from '../types'
+import { message } from '@/services/message'
 
 export function ManualOrderPage() {
   const navigate = useNavigate()
   const [customerQuery, setCustomerQuery] = useState('')
-  const [form] = Form.useForm()
+  const [form] = Form.useForm<ManualOrderInput>()
 
-  const { data: customers, isFetching: searchingCustomers } = useQuery({
-    queryKey: ['wallet-users-search', customerQuery],
-    queryFn: () => searchWalletUsers(customerQuery),
-    enabled: customerQuery.length > 1,
-  })
-
-  const { data: productsPage } = useQuery({
-    queryKey: ['products-for-manual-order'],
-    queryFn: () => listProducts({ page: 1, page_size: 200, is_active: true }),
-  })
+  const { data: customers, isFetching: searchingCustomers } = useWalletUserSearch(customerQuery)
+  const { data: productsPage } = useProducts({ page: 1, page_size: MAX_PAGE_SIZE, is_active: true })
+  const createMutation = useCreateManualOrder()
 
   const variantOptions = (productsPage?.items ?? []).flatMap((product) =>
     product.variants.map((variant) => ({
@@ -32,31 +26,19 @@ export function ManualOrderPage() {
     })),
   )
 
-  const createMutation = useMutation({
-    mutationFn: createManualOrder,
-    onSuccess: (order) => {
-      message.success(`پیش‌فاکتور سفارش ${order.order_number} ثبت شد`)
-      navigate(`/orders/${order.id}`)
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
-
-  function handleSubmit(values: any) {
-    const items = (values.items ?? []).map((item: { variant_id: number; quantity: number }) => ({
-      variant_id: item.variant_id,
-      quantity: item.quantity,
-    }))
-    createMutation.mutate({
-      user_id: values.user_id,
-      items,
-      shipping_full_name: values.shipping_full_name,
-      shipping_phone: values.shipping_phone,
-      shipping_address: values.shipping_address,
-      shipping_city: values.shipping_city,
-      shipping_postal_code: values.shipping_postal_code,
-      payment_method: values.payment_method,
-      notes: values.notes,
-    })
+  function handleSubmit(values: ManualOrderInput) {
+    createMutation.mutate(
+      {
+        ...values,
+        items: (values.items ?? []).map((item) => ({ variant_id: item.variant_id, quantity: item.quantity })),
+      },
+      {
+        onSuccess: (order) => {
+          message.success(`پیش‌فاکتور سفارش ${order.order_number} ثبت شد`)
+          navigate(`/orders/${order.id}`)
+        },
+      },
+    )
   }
 
   return (

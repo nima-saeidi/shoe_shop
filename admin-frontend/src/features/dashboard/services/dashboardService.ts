@@ -1,7 +1,9 @@
-import { apiClient } from './client'
+import { apiClient } from '@/services/apiClient'
 import type { DashboardStats } from '../types'
 
-export async function getDashboardStats(): Promise<DashboardStats> {
-  const { data } = await apiClient.get<DashboardStats>('/admin/dashboard')
-  return data
+export const dashboardService = {
+  async getStats(): Promise<DashboardStats> {
+    const { data } = await apiClient.get<DashboardStats>('/admin/dashboard')
+    return data
+  },
 }

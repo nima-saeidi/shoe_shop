@@ -1,31 +1,20 @@
 import { useParams } from 'react-router-dom'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Button, Card, Col, Form, Input, InputNumber, Row, Table, message } from 'antd'
-import { getWalletDetail, topupWallet } from '../../api/wallet'
-import { getApiErrorMessage } from '../../api/client'
-import { PageHeader } from '../../components/PageHeader'
-import { Money } from '../../components/Money'
-import { WALLET_TX_TYPE_FA } from '../../utils/enums'
-import { formatDateTime } from '../../utils/format'
-import type { WalletTransaction } from '../../types'
+import { Button, Card, Col, Form, Input, InputNumber, Row, Table } from 'antd'
+import { Money } from '@/components/ui/Money'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { WALLET_TX_TYPE_FA } from '@/utils/enums'
+import { formatDateTime } from '@/utils/format'
+import { useTopupWallet, useWalletDetail } from '../hooks/useWallet'
+import type { WalletTopupInput } from '../types'
+import { message } from '@/services/message'
 
 export function WalletDetailPage() {
   const { userId } = useParams()
   const id = Number(userId)
-  const queryClient = useQueryClient()
-  const [form] = Form.useForm()
+  const [form] = Form.useForm<WalletTopupInput>()
 
-  const { data, isLoading } = useQuery({ queryKey: ['wallet-detail', id], queryFn: () => getWalletDetail(id) })
-
-  const topupMutation = useMutation({
-    mutationFn: (values: { amount: number; description?: string }) => topupWallet(id, values.amount, values.description),
-    onSuccess: () => {
-      message.success('کیف پول با موفقیت شارژ شد')
-      queryClient.invalidateQueries({ queryKey: ['wallet-detail', id] })
-      form.resetFields()
-    },
-    onError: (err) => message.error(getApiErrorMessage(err)),
-  })
+  const { data, isLoading } = useWalletDetail(id)
+  const topupMutation = useTopupWallet(id)
 
   const columns = [
     { title: 'نوع', dataIndex: 'tx_type', render: (v: string) => WALLET_TX_TYPE_FA[v] ?? v },
@@ -50,13 +39,7 @@ export function WalletDetailPage() {
       <Row gutter={16}>
         <Col xs={24} lg={16}>
           <Card title="تراکنش‌ها" loading={isLoading}>
-            <Table
-              rowKey="id"
-              dataSource={data?.transactions ?? ([] as WalletTransaction[])}
-              columns={columns}
-              pagination={false}
-              size="small"
-            />
+            <Table rowKey="id" dataSource={data?.transactions ?? []} columns={columns} pagination={false} size="small" />
           </Card>
         </Col>
         <Col xs={24} lg={8}>
@@ -67,7 +50,18 @@ export function WalletDetailPage() {
             </div>
           </Card>
           <Card title="شارژ کیف پول">
-            <Form form={form} layout="vertical" onFinish={(values) => topupMutation.mutate(values)}>
+            <Form
+              form={form}
+              layout="vertical"
+              onFinish={(values) =>
+                topupMutation.mutate(values, {
+                  onSuccess: () => {
+                    message.success('کیف پول با موفقیت شارژ شد')
+                    form.resetFields()
+                  },
+                })
+              }
+            >
               <Form.Item name="amount" label="مبلغ (تومان)" rules={[{ required: true }]}>
                 <InputNumber style={{ width: '100%' }} min={1} />
               </Form.Item>

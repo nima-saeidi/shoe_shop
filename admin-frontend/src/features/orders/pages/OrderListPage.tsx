@@ -1,16 +1,14 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { Button, Select, Table, Tag } from 'antd'
 import { Link, useNavigate } from 'react-router-dom'
-import { listOrders } from '../../api/orders'
-import { PageHeader } from '../../components/PageHeader'
-import { StatusTag } from '../../components/StatusTag'
-import { Money } from '../../components/Money'
-import { ORDER_STATUS_FA, ORDER_TYPE_FA, PAYMENT_STATUS_FA } from '../../utils/enums'
-import { formatDateTime } from '../../utils/format'
-import type { Order } from '../../types'
-
-const STATUS_OPTIONS = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'returned']
+import { Money } from '@/components/ui/Money'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { StatusTag } from '@/components/ui/StatusTag'
+import { ORDER_STATUS_FA, ORDER_TYPE_FA, PAYMENT_STATUS_FA } from '@/utils/enums'
+import { formatDateTime } from '@/utils/format'
+import { useOrders } from '../hooks/useOrders'
+import { ORDER_STATUS_OPTIONS } from '../constants'
+import type { Order } from '../types'
 
 export function OrderListPage() {
   const navigate = useNavigate()
@@ -18,10 +16,7 @@ export function OrderListPage() {
   const [status, setStatus] = useState<string | undefined>()
   const [orderType, setOrderType] = useState<string | undefined>()
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['orders', page, status, orderType],
-    queryFn: () => listOrders({ page, page_size: 20, status, order_type: orderType }),
-  })
+  const { data, isLoading } = useOrders({ page, page_size: 20, status, order_type: orderType })
 
   const columns = [
     {
@@ -83,7 +78,7 @@ export function OrderListPage() {
             setPage(1)
             setStatus(v)
           }}
-          options={STATUS_OPTIONS.map((s) => ({ value: s, label: ORDER_STATUS_FA[s] }))}
+          options={ORDER_STATUS_OPTIONS.map((s) => ({ value: s, label: ORDER_STATUS_FA[s] }))}
         />
         <Select
           allowClear
