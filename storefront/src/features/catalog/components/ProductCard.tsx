@@ -1,9 +1,9 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { Price } from '@/components/ui/Price'
-import { mediaUrl } from '@/lib/media'
-import { slugPath } from '@/lib/seo'
-import type { Product } from '@/types'
+import { mediaUrl } from '@/utils/media'
+import { slugPath } from '@/utils/seo'
+import type { Product } from '../types'
 
 export function primaryImage(product: Product) {
   return product.images.find((i) => i.is_primary) ?? product.images[0]

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
-import { JsonLd } from '@/components/seo/JsonLd'
-import { absoluteUrl, breadcrumbJsonLd } from '@/lib/seo'
+import { JsonLd } from '@/components/ui/JsonLd'
+import { absoluteUrl, breadcrumbJsonLd } from '@/utils/seo'
 
 export const metadata: Metadata = {
   title: 'ارتباط با ما',

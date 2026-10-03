@@ -2,107 +2,93 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useAuthStore } from '@/app/store/authStore'
 import { Alert } from '@/components/ui/Alert'
 import { Field } from '@/components/ui/Field'
 import { Spinner } from '@/components/ui/Spinner'
-import { addressApi, cartApi, orderApi } from '@/lib/api/account'
-import { formatToman, getApiError } from '@/lib/format'
-import { useAuthStore } from '@/store/auth'
-import { useCartStore } from '@/store/cart'
-import type { Address } from '@/types'
+import { useAddresses } from '@/features/addresses/hooks/useAddresses'
+import type { Address } from '@/features/addresses/types'
+import { useCheckout } from '@/features/orders/hooks/useOrders'
+import type { ShippingInfo } from '@/features/orders/types'
+import { formatToman, getApiError } from '@/utils/format'
+import { useCart } from '../hooks/useCart'
 
-interface Shipping {
-  shipping_full_name: string
-  shipping_phone: string
-  shipping_city: string
-  shipping_address: string
-  shipping_postal_code: string
-}
+const EMPTY: ShippingInfo = { shipping_full_name: '', shipping_phone: '', shipping_city: '', shipping_address: '', shipping_postal_code: '' }
 
-const EMPTY: Shipping = { shipping_full_name: '', shipping_phone: '', shipping_city: '', shipping_address: '', shipping_postal_code: '' }
+const fromAddress = (a: Address): ShippingInfo => ({
+  shipping_full_name: a.full_name,
+  shipping_phone: a.phone_number,
+  shipping_city: a.city,
+  shipping_address: a.address_line,
+  shipping_postal_code: a.postal_code,
+})
 
 export function CheckoutForm() {
   const router = useRouter()
   const user = useAuthStore((s) => s.user)
-  const cart = useCartStore((s) => s.cart)
-  const setCart = useCartStore((s) => s.setCart)
-  const [addresses, setAddresses] = useState<Address[]>([])
-  const [ship, setShip] = useState<Shipping>(EMPTY)
+  const cartQuery = useCart()
+  const addressesQuery = useAddresses()
+  const checkout = useCheckout()
+  const [ship, setShip] = useState<ShippingInfo>(EMPTY)
   const [payment, setPayment] = useState<'cod' | 'wallet'>('cod')
   const [coupon, setCoupon] = useState('')
   const [notes, setNotes] = useState('')
-  const [loading, setLoading] = useState(true)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const prefilled = useRef(false)
 
-  useEffect(() => {
-    Promise.all([cartApi.get().then(setCart), addressApi.list().then(setAddresses)])
-      .catch((e) => setError(getApiError(e)))
-      .finally(() => setLoading(false))
-  }, [setCart])
+  const cart = cartQuery.data
+  const addresses = addressesQuery.data
 
+  // Prefill once: from the default address, else from the profile. Never overwrite what was typed.
   useEffect(() => {
-    // Prefill from the default address once, else from the profile.
+    if (prefilled.current || !addresses) return
+    prefilled.current = true
     const def = addresses.find((a) => a.is_default) ?? addresses[0]
-    if (def) fillFrom(def)
-    else if (user) setShip((s) => ({ ...s, shipping_full_name: s.shipping_full_name || user.full_name, shipping_phone: s.shipping_phone || (user.phone_number ?? '') }))
+    if (def) setShip(fromAddress(def))
+    else if (user) setShip((s) => ({ ...s, shipping_full_name: user.full_name, shipping_phone: user.phone_number ?? '' }))
   }, [addresses, user])
 
-  function fillFrom(a: Address) {
-    setShip({
-      shipping_full_name: a.full_name,
-      shipping_phone: a.phone_number,
-      shipping_city: a.city,
-      shipping_address: a.address_line,
-      shipping_postal_code: a.postal_code,
-    })
-  }
-
-  const set = (k: keyof Shipping) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+  const set = (k: keyof ShippingInfo) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setShip((s) => ({ ...s, [k]: e.target.value }))
 
-  async function onSubmit(e: FormEvent) {
+  function onSubmit(e: FormEvent) {
     e.preventDefault()
-    setBusy(true)
-    setError(null)
-    try {
-      const order = await orderApi.checkout({
+    checkout.mutate(
+      {
         ...ship,
         payment_method: payment,
         coupon_code: coupon.trim() || undefined,
         notes: notes.trim() || undefined,
-      })
-      setCart(null)
-      cartApi.get().then(setCart).catch(() => undefined)
-      router.replace(`/account/orders/${order.id}?placed=1`)
-    } catch (err) {
-      setError(getApiError(err))
-      setBusy(false)
-    }
+      },
+      { onSuccess: (order) => router.replace(`/account/orders/${order.id}?placed=1`) },
+    )
   }
 
-  if (loading) return <Spinner />
+  const loadError = cartQuery.error ?? addressesQuery.error
+  if ((cartQuery.isPending || addressesQuery.isPending) && !loadError) return <Spinner />
   if (!cart || cart.items.length === 0) {
     return (
-      <div className="card mx-auto max-w-lg p-10 text-center">
+      <div className="card mx-auto max-w-lg space-y-4 p-10 text-center">
+        {loadError && <Alert>{getApiError(loadError)}</Alert>}
         <p className="font-semibold">سبد خرید شما خالی است.</p>
-        <Link href="/products" className="btn btn-primary mt-6">مشاهده محصولات</Link>
+        <Link href="/products" className="btn btn-primary mt-2">مشاهده محصولات</Link>
       </div>
     )
   }
 
+  const error = checkout.error ?? loadError
+
   return (
     <form onSubmit={onSubmit} className="grid gap-6 lg:grid-cols-[1fr_20rem]">
       <div className="space-y-5">
-        {error && <Alert>{error}</Alert>}
+        {error && <Alert>{getApiError(error)}</Alert>}
 
         <section className="card space-y-4 p-5">
           <h2 className="font-bold">آدرس تحویل</h2>
-          {addresses.length > 0 && (
+          {addresses && addresses.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {addresses.map((a) => (
-                <button key={a.id} type="button" onClick={() => fillFrom(a)} className="btn btn-soft !py-1.5 text-xs">
+                <button key={a.id} type="button" onClick={() => setShip(fromAddress(a))} className="btn btn-soft !py-1.5 text-xs">
                   {a.city} — {a.address_line.slice(0, 22)}
                 </button>
               ))}
@@ -156,8 +142,8 @@ export function CheckoutForm() {
           <span>جمع کل</span>
           <span>{formatToman(cart.subtotal)}</span>
         </div>
-        <button type="submit" disabled={busy} className="btn btn-primary w-full py-3">
-          {busy ? 'در حال ثبت...' : 'ثبت نهایی سفارش'}
+        <button type="submit" disabled={checkout.isPending || checkout.isSuccess} className="btn btn-primary w-full py-3">
+          {checkout.isPending || checkout.isSuccess ? 'در حال ثبت...' : 'ثبت نهایی سفارش'}
         </button>
       </aside>
     </form>

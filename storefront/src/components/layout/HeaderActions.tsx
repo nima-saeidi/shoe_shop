@@ -1,12 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
+import { useAuthStore } from '@/app/store/authStore'
 import { CartIcon, UserIcon } from '@/components/ui/Icons'
-import { formatNumber } from '@/lib/format'
-import { useAuthStore } from '@/store/auth'
-import { useCartStore } from '@/store/cart'
+import { useLogout } from '@/features/auth/hooks/useAuth'
+import { useCart } from '@/features/cart/hooks/useCart'
+import { formatNumber } from '@/utils/format'
 
 export const ACCOUNT_LINKS = [
   { href: '/account', label: 'داشبورد' },
@@ -19,8 +19,8 @@ export const ACCOUNT_LINKS = [
 ]
 
 function UserMenu() {
-  const router = useRouter()
   const user = useAuthStore((s) => s.user)
+  const logout = useLogout()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -35,13 +35,6 @@ function UserMenu() {
       document.removeEventListener('keydown', onKey)
     }
   }, [open])
-
-  function logout() {
-    useAuthStore.getState().logout()
-    useCartStore.getState().setCart(null)
-    setOpen(false)
-    router.replace('/')
-  }
 
   return (
     <div ref={ref} className="relative">
@@ -76,7 +69,15 @@ function UserMenu() {
               </li>
             ))}
           </ul>
-          <button type="button" role="menuitem" onClick={logout} className="w-full border-t border-line px-4 py-2.5 text-start text-sm text-red-600 hover:bg-red-50">
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setOpen(false)
+              logout()
+            }}
+            className="w-full border-t border-line px-4 py-2.5 text-start text-sm text-red-600 hover:bg-red-50"
+          >
             خروج از حساب
           </button>
         </div>
@@ -88,7 +89,7 @@ function UserMenu() {
 export function HeaderActions() {
   const user = useAuthStore((s) => s.user)
   const hydrated = useAuthStore((s) => s.hydrated)
-  const count = useCartStore((s) => s.cart?.total_items ?? 0)
+  const count = useCart().data?.total_items ?? 0
   const loggedIn = hydrated && Boolean(user)
 
   return (

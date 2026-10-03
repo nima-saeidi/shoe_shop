@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
-import { RegisterForm } from '@/components/account/RegisterForm'
+import { RegisterForm } from '@/features/auth/components/RegisterForm'
 
 export const metadata: Metadata = { title: 'ثبت‌نام', robots: { index: false } }
 

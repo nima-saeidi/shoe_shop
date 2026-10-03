@@ -2,29 +2,28 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuthStore } from '@/app/store/authStore'
 import { Alert } from '@/components/ui/Alert'
 import { Price } from '@/components/ui/Price'
-import { cartApi } from '@/lib/api/account'
-import { getApiError } from '@/lib/format'
-import { useAuthStore } from '@/store/auth'
-import { useCartStore } from '@/store/cart'
-import type { Product } from '@/types'
+import { useAddToCart } from '@/features/cart/hooks/useCart'
+import { getApiError } from '@/utils/format'
+import type { Product } from '../types'
 
 /** Color + size picker and add-to-cart. Variants are the unit that gets purchased. */
 export function ProductPurchase({ product, onColorChange }: { product: Product; onColorChange?: (color: string) => void }) {
   const router = useRouter()
+  const addToCart = useAddToCart()
   const colors = useMemo(() => Array.from(new Set(product.variants.map((v) => v.color))), [product.variants])
   const [color, setColor] = useState(colors[0] ?? '')
   const [variantId, setVariantId] = useState<number | null>(null)
   const [qty, setQty] = useState(1)
-  const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<{ kind: 'error' | 'success'; text: string } | null>(null)
 
   const sizes = product.variants.filter((v) => v.color === color)
   const selected = product.variants.find((v) => v.id === variantId)
   const unit = selected ? product.discount_price ?? product.price : null
 
-  async function addToCart() {
+  function onAdd() {
     if (!useAuthStore.getState().accessToken) {
       router.push(`/login?next=${encodeURIComponent(`/products/${product.slug}`)}`)
       return
@@ -33,17 +32,14 @@ export function ProductPurchase({ product, onColorChange }: { product: Product; 
       setMsg({ kind: 'error', text: 'لطفاً سایز را انتخاب کنید.' })
       return
     }
-    setBusy(true)
     setMsg(null)
-    try {
-      const cart = await cartApi.add(selected.id, qty)
-      useCartStore.getState().setCart(cart)
-      setMsg({ kind: 'success', text: 'به سبد خرید اضافه شد.' })
-    } catch (e) {
-      setMsg({ kind: 'error', text: getApiError(e) })
-    } finally {
-      setBusy(false)
-    }
+    addToCart.mutate(
+      { variantId: selected.id, quantity: qty },
+      {
+        onSuccess: () => setMsg({ kind: 'success', text: 'به سبد خرید اضافه شد.' }),
+        onError: (e) => setMsg({ kind: 'error', text: getApiError(e) }),
+      },
+    )
   }
 
   if (product.variants.length === 0) return <Alert kind="info">این محصول در حال حاضر موجود نیست.</Alert>
@@ -116,8 +112,8 @@ export function ProductPurchase({ product, onColorChange }: { product: Product; 
             +
           </button>
         </div>
-        <button type="button" onClick={addToCart} disabled={busy} className="btn btn-primary flex-1 py-3">
-          {busy ? 'در حال افزودن...' : 'افزودن به سبد خرید'}
+        <button type="button" onClick={onAdd} disabled={addToCart.isPending} className="btn btn-primary flex-1 py-3">
+          {addToCart.isPending ? 'در حال افزودن...' : 'افزودن به سبد خرید'}
         </button>
       </div>
 

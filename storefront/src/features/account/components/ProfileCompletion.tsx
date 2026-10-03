@@ -1,22 +1,14 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import { addressApi } from '@/lib/api/account'
-import { getCompletion } from '@/lib/profile'
-import { useAuthStore } from '@/store/auth'
+import { useProfileCompletion } from '../hooks/useProfileCompletion'
 
 /** Progress card with the remaining steps to complete the customer's profile. */
 export function ProfileCompletion({ hideWhenComplete = false }: { hideWhenComplete?: boolean }) {
-  const user = useAuthStore((s) => s.user)
-  const [addressCount, setAddressCount] = useState<number | null>(null)
+  const completion = useProfileCompletion()
 
-  useEffect(() => {
-    addressApi.list().then((a) => setAddressCount(a.length)).catch(() => setAddressCount(0))
-  }, [])
-
-  if (!user || addressCount === null) return null
-  const { items, percent, complete } = getCompletion(user, addressCount)
+  if (!completion) return null
+  const { items, percent, complete } = completion
   if (complete && hideWhenComplete) return null
 
   return (

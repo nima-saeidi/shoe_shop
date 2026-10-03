@@ -8,7 +8,7 @@ export const contentType = 'image/png'
 
 // Default social-share card (used wherever a page has no product photo of its own).
 export default async function OpengraphImage() {
-  const font = await readFile(join(process.cwd(), 'src/app/fonts/Vazirmatn-Bold.ttf'))
+  const font = await readFile(join(process.cwd(), 'src/assets/fonts/Vazirmatn-Bold.ttf'))
   return new ImageResponse(
     (
       <div

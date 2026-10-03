@@ -2,8 +2,8 @@
 
 import Image from 'next/image'
 import { useMemo, useState } from 'react'
-import { mediaUrl } from '@/lib/media'
-import type { Product } from '@/types'
+import { mediaUrl } from '@/utils/media'
+import type { Product } from '../types'
 import { ProductPurchase } from './ProductPurchase'
 
 /** Gallery + purchase panel. Picking a color jumps the gallery to that color's photos. */

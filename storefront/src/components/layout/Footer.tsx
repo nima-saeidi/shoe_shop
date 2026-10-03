@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Logo } from '@/components/ui/Logo'
-import { SITE_NAME } from '@/lib/config'
+import { SITE_NAME } from '@/utils/config'
 
 const TRUST = [
   { title: 'تولید مستقیم در تبریز', text: 'از کارگاه تا درب منزل' },

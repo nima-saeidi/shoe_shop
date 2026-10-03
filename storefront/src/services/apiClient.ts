@@ -1,12 +1,13 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
-import { useAuthStore } from '@/store/auth'
-import { isTokenExpired } from './jwt'
+import { useAuthStore } from '@/app/store/authStore'
+import { isTokenExpired } from '@/utils/jwt'
 
 /**
  * Browser axios instance. Requests go to the same origin (`/api/v1`) and are proxied to
- * FastAPI by Next.js, so there is no CORS to configure.
+ * FastAPI by Next.js, so there is no CORS to configure. Only feature services call it;
+ * components reach the API through React Query hooks.
  */
-export const http = axios.create({ baseURL: '/api/v1', timeout: 20_000 })
+export const apiClient = axios.create({ baseURL: '/api/v1', timeout: 20_000 })
 
 const isAuthUrl = (url?: string) => Boolean(url && /\/auth\/(login|register|refresh)/.test(url))
 
@@ -37,7 +38,7 @@ function forceLogout() {
   }
 }
 
-http.interceptors.request.use(async (config) => {
+apiClient.interceptors.request.use(async (config) => {
   if (isAuthUrl(config.url)) return config
   let token = useAuthStore.getState().accessToken
   if (token && isTokenExpired(token, 30_000)) {
@@ -60,7 +61,7 @@ interface Retryable extends InternalAxiosRequestConfig {
   _retried?: boolean
 }
 
-http.interceptors.response.use(
+apiClient.interceptors.response.use(
   (r) => r,
   async (error: AxiosError) => {
     const original = error.config as Retryable | undefined
@@ -69,7 +70,7 @@ http.interceptors.response.use(
       try {
         const token = await getFreshToken()
         original.headers.Authorization = `Bearer ${token}`
-        return http(original)
+        return apiClient(original)
       } catch {
         forceLogout()
       }

@@ -1,53 +1,40 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Alert } from '@/components/ui/Alert'
 import { Field } from '@/components/ui/Field'
 import { Spinner } from '@/components/ui/Spinner'
 import { StatusBadge } from '@/components/ui/StatusBadge'
-import { ticketApi } from '@/lib/api/account'
-import { formatDateTime, getApiError } from '@/lib/format'
-import { TICKET_STATUS_FA } from '@/lib/labels'
-import type { Ticket } from '@/types'
+import { formatDateTime, getApiError } from '@/utils/format'
+import { TICKET_STATUS_FA } from '@/utils/labels'
+import { useCreateTicket, useMyTickets } from '../hooks/useTickets'
 
-export default function TicketsPage() {
-  const [tickets, setTickets] = useState<Ticket[] | null>(null)
+export function TicketsPage() {
+  const { data: tickets, error: loadError } = useMyTickets()
+  const create = useCreateTicket()
   const [creating, setCreating] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const error = loadError ?? create.error
 
-  const load = () => ticketApi.mine().then(setTickets).catch((e) => setError(getApiError(e)))
-  useEffect(() => {
-    load()
-  }, [])
-
-  async function create(e: FormEvent<HTMLFormElement>) {
+  function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const f = new FormData(e.currentTarget)
-    setBusy(true)
-    setError(null)
-    try {
-      await ticketApi.create(String(f.get('subject')).trim(), String(f.get('message')).trim())
-      setCreating(false)
-      await load()
-    } catch (err) {
-      setError(getApiError(err))
-    } finally {
-      setBusy(false)
-    }
+    create.mutate(
+      { subject: String(f.get('subject')).trim(), message: String(f.get('message')).trim() },
+      { onSuccess: () => setCreating(false) },
+    )
   }
 
   return (
     <>
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">تیکت‌های پشتیبانی</h1>
-        {!creating && <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}>تیکت جدید</button>}
+        {!creating && <button type="button" className="btn btn-primary" onClick={() => { create.reset(); setCreating(true) }}>تیکت جدید</button>}
       </div>
-      {error && <Alert>{error}</Alert>}
+      {error && <Alert>{getApiError(error)}</Alert>}
 
       {creating && (
-        <form onSubmit={create} className="card space-y-4 p-5">
+        <form onSubmit={onSubmit} className="card space-y-4 p-5">
           <h2 className="font-bold">ارسال تیکت جدید</h2>
           <Field label="موضوع" name="subject" required minLength={3} maxLength={200} />
           <div>
@@ -55,14 +42,14 @@ export default function TicketsPage() {
             <textarea id="message" name="message" className="input" rows={5} required maxLength={2000} />
           </div>
           <div className="flex gap-3">
-            <button type="submit" disabled={busy} className="btn btn-primary">{busy ? 'در حال ارسال...' : 'ارسال'}</button>
+            <button type="submit" disabled={create.isPending} className="btn btn-primary">{create.isPending ? 'در حال ارسال...' : 'ارسال'}</button>
             <button type="button" className="btn btn-outline" onClick={() => setCreating(false)}>انصراف</button>
           </div>
         </form>
       )}
 
       {!tickets ? (
-        !error && <Spinner />
+        !loadError && <Spinner />
       ) : tickets.length === 0 ? (
         <div className="card p-10 text-center text-muted">هنوز تیکتی ثبت نکرده‌اید.</div>
       ) : (

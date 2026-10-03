@@ -2,13 +2,13 @@ import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
 import { Footer } from '@/components/layout/Footer'
 import { Header } from '@/components/layout/Header'
-import { SessionBootstrap } from '@/components/layout/SessionBootstrap'
-import { SITE_NAME, SITE_TAGLINE, SITE_URL } from '@/lib/config'
-import { JsonLd } from '@/components/seo/JsonLd'
-import './globals.css'
+import { AppProviders } from '@/app/providers/AppProviders'
+import { SITE_NAME, SITE_TAGLINE, SITE_URL } from '@/utils/config'
+import { JsonLd } from '@/components/ui/JsonLd'
+import '@/assets/styles/globals.css'
 
 const vazir = localFont({
-  src: './fonts/Vazirmatn.woff2',
+  src: '../assets/fonts/Vazirmatn.woff2',
   variable: '--font-vazir',
   display: 'swap',
   weight: '100 900',
@@ -77,12 +77,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2">
           پرش به محتوای اصلی
         </a>
-        <SessionBootstrap />
-        <Header />
-        <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6">
-          {children}
-        </main>
-        <Footer />
+        <AppProviders>
+          <Header />
+          <main id="main" className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6">
+            {children}
+          </main>
+          <Footer />
+        </AppProviders>
         <JsonLd data={jsonLd} />
       </body>
     </html>

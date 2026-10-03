@@ -2,48 +2,29 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
 import { Alert } from '@/components/ui/Alert'
 import { Spinner } from '@/components/ui/Spinner'
-import { cartApi } from '@/lib/api/account'
-import { formatNumber, formatToman, getApiError } from '@/lib/format'
-import { mediaUrl } from '@/lib/media'
-import { useCartStore } from '@/store/cart'
+import { formatNumber, formatToman, getApiError } from '@/utils/format'
+import { mediaUrl } from '@/utils/media'
+import { useCart, useRemoveCartItem, useUpdateCartItem } from '../hooks/useCart'
 
 export function CartView() {
-  const cart = useCartStore((s) => s.cart)
-  const setCart = useCartStore((s) => s.setCart)
-  const [loading, setLoading] = useState(!cart)
-  const [busyId, setBusyId] = useState<number | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const { data: cart, isPending, error: loadError } = useCart()
+  const update = useUpdateCartItem()
+  const remove = useRemoveCartItem()
 
-  useEffect(() => {
-    cartApi
-      .get()
-      .then(setCart)
-      .catch((e) => setError(getApiError(e)))
-      .finally(() => setLoading(false))
-  }, [setCart])
+  // The row that has a request in flight gets its buttons disabled.
+  const busyId = update.isPending ? update.variables?.itemId : remove.isPending ? remove.variables : null
+  const error = loadError ?? update.error ?? remove.error
 
-  async function run(itemId: number, action: () => Promise<typeof cart>) {
-    setBusyId(itemId)
-    setError(null)
-    try {
-      setCart(await action())
-    } catch (e) {
-      setError(getApiError(e))
-    } finally {
-      setBusyId(null)
-    }
-  }
-
-  if (loading) return <Spinner />
+  if (isPending && !loadError) return <Spinner />
 
   if (!cart || cart.items.length === 0) {
     return (
-      <div className="card mx-auto max-w-lg p-10 text-center">
+      <div className="card mx-auto max-w-lg space-y-4 p-10 text-center">
+        {loadError && <Alert>{getApiError(loadError)}</Alert>}
         <p className="text-lg font-semibold">سبد خرید شما خالی است</p>
-        <Link href="/products" className="btn btn-primary mt-6">مشاهده محصولات</Link>
+        <Link href="/products" className="btn btn-primary mt-2">مشاهده محصولات</Link>
       </div>
     )
   }
@@ -51,10 +32,11 @@ export function CartView() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_20rem]">
       <div className="space-y-3">
-        {error && <Alert>{error}</Alert>}
+        {error && <Alert>{getApiError(error)}</Alert>}
         <ul className="space-y-3">
           {cart.items.map((item) => {
             const src = mediaUrl(item.image_url)
+            const busy = busyId === item.id
             return (
               <li key={item.id} className="card flex gap-4 p-3">
                 <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl bg-blush">
@@ -70,8 +52,8 @@ export function CartView() {
                       <button
                         type="button"
                         aria-label="کاهش تعداد"
-                        disabled={busyId === item.id || item.quantity <= 1}
-                        onClick={() => run(item.id, () => cartApi.update(item.id, item.quantity - 1))}
+                        disabled={busy || item.quantity <= 1}
+                        onClick={() => update.mutate({ itemId: item.id, quantity: item.quantity - 1 })}
                         className="px-3 py-1 disabled:opacity-40"
                       >
                         −
@@ -80,8 +62,8 @@ export function CartView() {
                       <button
                         type="button"
                         aria-label="افزایش تعداد"
-                        disabled={busyId === item.id}
-                        onClick={() => run(item.id, () => cartApi.update(item.id, item.quantity + 1))}
+                        disabled={busy}
+                        onClick={() => update.mutate({ itemId: item.id, quantity: item.quantity + 1 })}
                         className="px-3 py-1 disabled:opacity-40"
                       >
                         +
@@ -90,8 +72,8 @@ export function CartView() {
                     <span className="text-sm font-semibold">{formatToman(item.line_total)}</span>
                     <button
                       type="button"
-                      disabled={busyId === item.id}
-                      onClick={() => run(item.id, () => cartApi.remove(item.id))}
+                      disabled={busy}
+                      onClick={() => remove.mutate(item.id)}
                       className="text-xs text-red-600 hover:underline"
                     >
                       حذف

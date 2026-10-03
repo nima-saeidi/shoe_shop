@@ -1,42 +1,34 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { Alert } from '@/components/ui/Alert'
 import { Spinner } from '@/components/ui/Spinner'
-import { walletApi } from '@/lib/api/account'
-import { formatDateTime, formatToman, getApiError } from '@/lib/format'
-import { TX_TYPE_FA } from '@/lib/labels'
-import type { WalletTransaction } from '@/types'
+import { formatDateTime, formatToman, getApiError } from '@/utils/format'
+import { TX_TYPE_FA } from '@/utils/labels'
+import { useWalletBalance, useWalletTransactions } from '../hooks/useWallet'
 
-export default function WalletPage() {
-  const [balance, setBalance] = useState<number | null>(null)
-  const [txs, setTxs] = useState<WalletTransaction[] | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    Promise.all([walletApi.balance(), walletApi.transactions()])
-      .then(([b, t]) => {
-        setBalance(b.balance)
-        setTxs(t)
-      })
-      .catch((e) => setError(getApiError(e)))
-  }, [])
+export function WalletPage() {
+  const balance = useWalletBalance()
+  const transactions = useWalletTransactions()
+  const error = balance.error ?? transactions.error
+  const txs = transactions.data
 
   return (
     <>
       <h1 className="text-2xl font-bold">کیف پول</h1>
-      {error && <Alert>{error}</Alert>}
-      {balance === null && !error && <Spinner />}
-      {balance !== null && (
+      {error && <Alert>{getApiError(error)}</Alert>}
+      {!balance.data && !error && <Spinner />}
+      {balance.data && (
         <>
           <div className="card bg-gradient-to-l from-[#efe4e8] to-white p-6">
             <p className="text-sm text-muted">موجودی فعلی</p>
-            <p className="mt-2 text-3xl font-extrabold">{formatToman(balance)}</p>
+            <p className="mt-2 text-3xl font-extrabold">{formatToman(balance.data.balance)}</p>
             <p className="mt-3 text-xs text-muted">برای شارژ کیف پول با پشتیبانی تماس بگیرید.</p>
           </div>
           <section className="card p-5">
             <h2 className="mb-3 font-bold">تراکنش‌ها</h2>
-            {txs && txs.length > 0 ? (
+            {transactions.isPending ? (
+              <p className="text-sm text-muted">در حال بارگذاری...</p>
+            ) : txs && txs.length > 0 ? (
               <ul className="divide-y divide-line text-sm">
                 {txs.map((t) => (
                   <li key={t.id} className="flex flex-wrap items-center justify-between gap-2 py-3">

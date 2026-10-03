@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
-import { AccountNav } from '@/components/account/AccountNav'
-import { AuthGuard } from '@/components/account/AuthGuard'
+import { AccountNav } from '@/features/account/components/AccountNav'
+import { AuthGuard } from '@/features/auth/components/AuthGuard'
 
 export const metadata: Metadata = { title: { default: 'پنل کاربری', template: '%s | پنل کاربری' }, robots: { index: false, follow: false } }
 

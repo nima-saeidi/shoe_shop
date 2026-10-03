@@ -1,25 +1,23 @@
 'use client'
 
-import { useEffect, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { Alert } from '@/components/ui/Alert'
-import { Field } from '@/components/ui/Field'
 import { Spinner } from '@/components/ui/Spinner'
-import { addressApi } from '@/lib/api/account'
-import { getApiError } from '@/lib/format'
-import type { Address, AddressInput } from '@/types'
+import { getApiError } from '@/utils/format'
+import { AddressForm } from '../components/AddressForm'
+import { useAddresses, useDeleteAddress, useSaveAddress } from '../hooks/useAddresses'
+import type { Address, AddressInput } from '../types'
 
-export default function AddressesPage() {
-  const [items, setItems] = useState<Address[] | null>(null)
+export function AddressesPage() {
+  const { data: items, error: loadError } = useAddresses()
+  const save = useSaveAddress()
+  const remove = useDeleteAddress()
   const [editing, setEditing] = useState<Address | 'new' | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
 
-  const load = () => addressApi.list().then(setItems).catch((e) => setError(getApiError(e)))
-  useEffect(() => {
-    load()
-  }, [])
+  const error = loadError ?? save.error ?? remove.error
+  const current = editing && editing !== 'new' ? editing : null
 
-  async function save(e: FormEvent<HTMLFormElement>) {
+  function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const f = new FormData(e.currentTarget)
     const input: AddressInput = {
@@ -30,65 +28,25 @@ export default function AddressesPage() {
       postal_code: String(f.get('postal_code')).trim(),
       is_default: f.get('is_default') === 'on',
     }
-    setBusy(true)
-    setError(null)
-    try {
-      if (editing && editing !== 'new') await addressApi.update(editing.id, input)
-      else await addressApi.create(input)
-      setEditing(null)
-      await load()
-    } catch (err) {
-      setError(getApiError(err))
-    } finally {
-      setBusy(false)
-    }
+    save.mutate({ id: current?.id, input }, { onSuccess: () => setEditing(null) })
   }
 
-  async function remove(a: Address) {
-    if (!window.confirm('این آدرس حذف شود؟')) return
-    try {
-      await addressApi.remove(a.id)
-      await load()
-    } catch (err) {
-      setError(getApiError(err))
-    }
+  function onDelete(a: Address) {
+    if (window.confirm('این آدرس حذف شود؟')) remove.mutate(a.id)
   }
-
-  const current = editing && editing !== 'new' ? editing : null
 
   return (
     <>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">آدرس‌ها</h1>
-        {!editing && <button type="button" className="btn btn-primary" onClick={() => setEditing('new')}>آدرس جدید</button>}
+        {!editing && <button type="button" className="btn btn-primary" onClick={() => { save.reset(); setEditing('new') }}>آدرس جدید</button>}
       </div>
-      {error && <Alert>{error}</Alert>}
+      {error && <Alert>{getApiError(error)}</Alert>}
 
-      {editing && (
-        <form key={current?.id ?? 'new'} onSubmit={save} className="card space-y-4 p-5">
-          <h2 className="font-bold">{current ? 'ویرایش آدرس' : 'آدرس جدید'}</h2>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="نام گیرنده" name="full_name" defaultValue={current?.full_name} required maxLength={150} />
-            <Field label="شماره تماس" name="phone_number" defaultValue={current?.phone_number} required maxLength={20} dir="ltr" type="tel" />
-            <Field label="شهر" name="city" defaultValue={current?.city} required maxLength={100} />
-            <Field label="کد پستی" name="postal_code" defaultValue={current?.postal_code} required maxLength={20} dir="ltr" />
-          </div>
-          <div>
-            <label htmlFor="address_line" className="mb-1.5 block text-sm font-medium">نشانی کامل</label>
-            <textarea id="address_line" name="address_line" className="input" rows={3} required maxLength={500} defaultValue={current?.address_line} />
-          </div>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="is_default" defaultChecked={current?.is_default} className="accent-[#8a2b45]" /> آدرس پیش‌فرض
-          </label>
-          <div className="flex gap-3">
-            <button type="submit" disabled={busy} className="btn btn-primary">ذخیره</button>
-            <button type="button" className="btn btn-outline" onClick={() => setEditing(null)}>انصراف</button>
-          </div>
-        </form>
-      )}
+      {editing && <AddressForm address={current} busy={save.isPending} onSubmit={onSubmit} onCancel={() => setEditing(null)} />}
 
       {!items ? (
-        !error && <Spinner />
+        !loadError && <Spinner />
       ) : items.length === 0 && !editing ? (
         <div className="card p-10 text-center text-muted">آدرسی ثبت نشده است.</div>
       ) : (
@@ -103,8 +61,8 @@ export default function AddressesPage() {
               <p>{a.city}، {a.address_line}</p>
               <p className="text-xs text-muted">کد پستی: {a.postal_code}</p>
               <div className="flex gap-4 pt-1">
-                <button type="button" className="text-brand-dark" onClick={() => setEditing(a)}>ویرایش</button>
-                <button type="button" className="text-red-600" onClick={() => remove(a)}>حذف</button>
+                <button type="button" className="text-brand-dark" onClick={() => { save.reset(); setEditing(a) }}>ویرایش</button>
+                <button type="button" className="text-red-600" disabled={remove.isPending} onClick={() => onDelete(a)}>حذف</button>
               </div>
             </li>
           ))}

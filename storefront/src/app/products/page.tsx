@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import { permanentRedirect } from 'next/navigation'
-import { ProductListing, listingSeo, type ListingParams } from '@/components/product/ProductListing'
-import { getCategories } from '@/lib/api/catalog'
-import { slugPath } from '@/lib/seo'
+import { ProductListing, listingSeo, type ListingParams } from '@/features/catalog/components/ProductListing'
+import { catalogService } from '@/features/catalog/services/catalogService'
+import { slugPath } from '@/utils/seo'
 
 export const revalidate = 120
 
@@ -13,7 +13,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SearchP
   const seo = listingSeo('/products', sp)
   // Legacy ?category=ID URLs: point search engines at the category landing page and keep this one out of the index.
   if (sp.category) {
-    const cat = (await getCategories()).find((c) => String(c.id) === sp.category)
+    const cat = (await catalogService.getCategories()).find((c) => String(c.id) === sp.category)
     if (cat) {
       return { title: `خرید ${cat.name}`, alternates: { canonical: `/category/${slugPath(cat.slug)}` }, robots: { index: false, follow: true } }
     }
@@ -32,7 +32,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
 
   // Legacy /products?category=ID links -> permanent redirect to the indexable category landing page.
   if (sp.category) {
-    const cat = (await getCategories()).find((c) => String(c.id) === sp.category)
+    const cat = (await catalogService.getCategories()).find((c) => String(c.id) === sp.category)
     if (cat) permanentRedirect(`/category/${slugPath(cat.slug)}`)
   }
 

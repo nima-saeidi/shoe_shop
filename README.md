@@ -5,8 +5,8 @@ A monorepo of **three independent projects** plus the Docker stack that runs the
 | Folder | What | Stack | Own Dockerfile |
 |---|---|---|---|
 | `backend/` | REST API, business logic, legacy Jinja2 admin | FastAPI, PostgreSQL, SQLAlchemy, Alembic | yes |
-| `admin-frontend/` | Admin panel SPA (Persian, Jalali calendar) | React, Vite, Ant Design | yes (nginx) |
-| `storefront/` | Public shop: SEO, cart, checkout, customer account | Next.js, Tailwind, axios | yes (standalone) |
+| `admin-frontend/` | Admin panel SPA (Persian, Jalali calendar) | React, Vite, Ant Design, React Query, axios | yes (nginx) |
+| `storefront/` | Public shop: SEO, cart, checkout, customer account | Next.js, Tailwind, React Query, axios | yes (standalone) |
 
 Each folder can be developed, built and deployed on its own (see its `README.md`). `docker-compose.yml` +
 `proxy/Caddyfile` wire them together behind one reverse proxy with automatic HTTPS.

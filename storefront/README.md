@@ -1,6 +1,6 @@
 # Storefront (Next.js)
 
-Public shop for Panik — Persian/RTL, SEO-first, talking to the FastAPI backend with axios.
+Public shop for Panik — Persian/RTL, SEO-first, talking to the FastAPI backend with axios + TanStack React Query.
 
 ## Run
 
@@ -18,10 +18,25 @@ npm run build && npm start     # production
   (`Organization`, `Product`), `sitemap.xml` and `robots.txt`.
 - `/cart`, `/checkout`, `/login`, `/register`, `/account/*` (dashboard, orders, addresses, wallet, profile) are
   client-side, behind `AuthGuard`, and marked `noindex`.
-- `src/lib/server-http.ts` — axios for Server Components (direct to FastAPI).
-  `src/lib/http.ts` — browser axios (`/api/v1`, proxied by `next.config.ts` rewrites → no CORS), with proactive
-  + single-flight JWT refresh.
-- `src/store` — zustand: persisted auth tokens/user, cart mirror (header badge).
+- Folder layout (same as the admin panel):
+
+  ```
+  src/
+    app/          routes (thin page.tsx files) + providers/ (React Query) + store/ (zustand auth)
+    assets/       fonts/, styles/globals.css
+    components/   layout/ (header, footer, nav) and ui/ (Alert, Field, Price, ...)
+    features/     <feature>/{components,hooks,pages,services,types} — auth, account, catalog, cart,
+                  orders, addresses, wallet, tickets, returns
+    services/     apiClient.ts (browser axios), serverClient.ts (server axios), queryClient.ts
+    types/        shared types (Page<T>)
+    utils/        config, format, labels, media, seo, jwt
+  ```
+- Data flow in the browser: `component → features/<x>/hooks (React Query) → features/<x>/services → axios`.
+  `services/apiClient.ts` targets `/api/v1` (proxied by `next.config.ts` rewrites → no CORS) with proactive +
+  single-flight JWT refresh. Server state (cart, orders, addresses, ...) lives only in the React Query cache;
+  zustand keeps just the persisted auth tokens/user.
+- Catalog reads run on the server (`features/catalog/services/catalogService.ts`, axios straight to FastAPI) so
+  every catalog page is fully rendered for search engines.
 - Styling: Tailwind v4 theme tokens in `globals.css`; font Vazirmatn is bundled locally (no Google Fonts request).
 
 ## SEO checklist (implemented)

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { SITE_NAME, SITE_TAGLINE } from '@/lib/config'
+import { SITE_NAME, SITE_TAGLINE } from '@/utils/config'
 
 export function Logo({ className = '' }: { className?: string }) {
   return (

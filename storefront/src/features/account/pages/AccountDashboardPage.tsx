@@ -1,29 +1,29 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import { ACCOUNT_ITEMS } from '@/components/account/AccountNav'
-import { ProfileCompletion } from '@/components/account/ProfileCompletion'
+import { useAuthStore } from '@/app/store/authStore'
 import { StatusBadge } from '@/components/ui/StatusBadge'
-import { orderApi } from '@/lib/api/account'
-import { formatDate, formatToman } from '@/lib/format'
-import { ORDER_STATUS_FA } from '@/lib/labels'
-import { useAuthStore } from '@/store/auth'
-import { useCartStore } from '@/store/cart'
-import type { Order } from '@/types'
+import { useCart } from '@/features/cart/hooks/useCart'
+import { useMyOrders } from '@/features/orders/hooks/useOrders'
+import { formatDate, formatToman } from '@/utils/format'
+import { ORDER_STATUS_FA } from '@/utils/labels'
+import { ACCOUNT_ITEMS } from '../components/AccountNav'
+import { ProfileCompletion } from '../components/ProfileCompletion'
 
-export default function AccountDashboard() {
+const QUICK_ACTIONS = [
+  { href: '/account/orders', label: 'مشاهده سفارش‌ها' },
+  { href: '/account/tickets', label: 'ارسال تیکت' },
+  { href: '/account/returns', label: 'درخواست مرجوعی' },
+  { href: '/account/addresses', label: 'مدیریت آدرس‌ها' },
+  { href: '/account/wallet', label: 'کیف پول' },
+  { href: '/account/profile', label: 'ویرایش پروفایل' },
+]
+
+export function AccountDashboardPage() {
   const user = useAuthStore((s) => s.user)
-  const cartCount = useCartStore((s) => s.cart?.total_items ?? 0)
-  const [orders, setOrders] = useState<Order[] | null>(null)
-  const [total, setTotal] = useState(0)
-
-  useEffect(() => {
-    orderApi.mine(1, 3).then((p) => {
-      setOrders(p.items)
-      setTotal(p.total)
-    }).catch(() => setOrders([]))
-  }, [])
+  const cartCount = useCart().data?.total_items ?? 0
+  const { data: ordersPage, isError } = useMyOrders(1, 3)
+  const orders = ordersPage?.items ?? (isError ? [] : null)
 
   return (
     <>
@@ -38,7 +38,7 @@ export default function AccountDashboard() {
         </div>
         <div className="card p-5">
           <p className="text-sm text-muted">تعداد سفارش‌ها</p>
-          <p className="mt-2 text-lg font-bold">{total.toLocaleString('fa-IR')}</p>
+          <p className="mt-2 text-lg font-bold">{(ordersPage?.total ?? 0).toLocaleString('fa-IR')}</p>
         </div>
         <Link href="/cart" className="card p-5 transition hover:border-brand/50">
           <p className="text-sm text-muted">سبد خرید</p>
@@ -49,14 +49,7 @@ export default function AccountDashboard() {
       <section aria-label="دسترسی سریع">
         <h2 className="mb-3 font-bold">دسترسی سریع</h2>
         <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
-          {[
-            { href: '/account/orders', label: 'مشاهده سفارش‌ها' },
-            { href: '/account/tickets', label: 'ارسال تیکت' },
-            { href: '/account/returns', label: 'درخواست مرجوعی' },
-            { href: '/account/addresses', label: 'مدیریت آدرس‌ها' },
-            { href: '/account/wallet', label: 'کیف پول' },
-            { href: '/account/profile', label: 'ویرایش پروفایل' },
-          ].map((a) => (
+          {QUICK_ACTIONS.map((a) => (
             <li key={a.href}>
               <Link href={a.href} className="card flex h-full flex-col items-center gap-2 p-4 text-center text-sm transition hover:border-brand/50 hover:text-brand">
                 <span aria-hidden="true" className="flex h-10 w-10 items-center justify-center rounded-lg bg-blush-deep text-lg text-brand">

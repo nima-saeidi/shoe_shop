@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
-import { AuthGuard } from '@/components/account/AuthGuard'
-import { CheckoutForm } from '@/components/cart/CheckoutForm'
+import { AuthGuard } from '@/features/auth/components/AuthGuard'
+import { CheckoutForm } from '@/features/cart/components/CheckoutForm'
 
 export const metadata: Metadata = { title: 'ثبت سفارش', robots: { index: false } }
 

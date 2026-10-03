@@ -1,15 +1,15 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { ProductListing, listingSeo, type ListingParams } from '@/components/product/ProductListing'
-import { getCategoryBySlug } from '@/lib/api/catalog'
-import { decodeSlug, slugPath } from '@/lib/seo'
+import { ProductListing, listingSeo, type ListingParams } from '@/features/catalog/components/ProductListing'
+import { catalogService } from '@/features/catalog/services/catalogService'
+import { decodeSlug, slugPath } from '@/utils/seo'
 
 export const revalidate = 120
 
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<ListingParams> }
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
-  const category = await getCategoryBySlug(decodeSlug((await params).slug))
+  const category = await catalogService.getCategoryBySlug(decodeSlug((await params).slug))
   if (!category) return { title: 'دسته‌بندی یافت نشد', robots: { index: false } }
 
   const base = `/category/${slugPath(category.slug)}`
@@ -27,7 +27,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
 }
 
 export default async function CategoryPage({ params, searchParams }: Props) {
-  const category = await getCategoryBySlug(decodeSlug((await params).slug))
+  const category = await catalogService.getCategoryBySlug(decodeSlug((await params).slug))
   if (!category) notFound()
 
   return (

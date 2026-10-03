@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
-import { getCategories, getProducts } from '@/lib/api/catalog'
-import { absoluteUrl, slugPath } from '@/lib/seo'
+import { catalogService } from '@/features/catalog/services/catalogService'
+import { absoluteUrl, slugPath } from '@/utils/seo'
 
 export const revalidate = 3600
 
@@ -12,7 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: absoluteUrl('/contact'), changeFrequency: 'yearly', priority: 0.4 },
   ]
 
-  const categories = (await getCategories()).map((c) => ({
+  const categories = (await catalogService.getCategories()).map((c) => ({
     url: absoluteUrl(`/category/${slugPath(c.slug)}`),
     changeFrequency: 'weekly' as const,
     priority: 0.8,
@@ -20,7 +20,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const products: MetadataRoute.Sitemap = []
   for (let page = 1; page <= 50; page++) {
-    const data = await getProducts({ page, page_size: 100 })
+    const data = await catalogService.getProducts({ page, page_size: 100 })
     for (const p of data.items) {
       products.push({
         url: absoluteUrl(`/products/${slugPath(p.slug)}`),

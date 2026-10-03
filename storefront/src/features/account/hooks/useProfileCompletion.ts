@@ -1,4 +1,6 @@
-import type { User } from '@/types'
+import { useAuthStore } from '@/app/store/authStore'
+import type { User } from '@/features/auth/types'
+import { useAddresses } from '@/features/addresses/hooks/useAddresses'
 
 export interface CompletionItem {
   key: string
@@ -19,4 +21,14 @@ export function getCompletion(user: User | null, addressCount: number | null) {
   ]
   const done = items.filter((i) => i.done).length
   return { items, percent: Math.round((done / items.length) * 100), complete: done === items.length }
+}
+
+/** Completion of the signed-in customer's profile, or null while it is still loading. */
+export function useProfileCompletion() {
+  const user = useAuthStore((s) => s.user)
+  const addresses = useAddresses()
+  // A failed address request counts as "no address yet" instead of hiding the card forever.
+  const addressCount = addresses.data?.length ?? (addresses.isError ? 0 : null)
+  if (!user || addressCount === null) return null
+  return getCompletion(user, addressCount)
 }

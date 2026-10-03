@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
-import { AuthGuard } from '@/components/account/AuthGuard'
-import { CartView } from '@/components/cart/CartView'
+import { AuthGuard } from '@/features/auth/components/AuthGuard'
+import { CartView } from '@/features/cart/components/CartView'
 
 export const metadata: Metadata = { title: 'سبد خرید', robots: { index: false } }
 

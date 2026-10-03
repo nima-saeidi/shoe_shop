@@ -1,8 +1,8 @@
 import Link from 'next/link'
-import { JsonLd } from '@/components/seo/JsonLd'
-import { getCategories, getProducts } from '@/lib/api/catalog'
-import { absoluteUrl, breadcrumbJsonLd, slugPath } from '@/lib/seo'
-import type { Category } from '@/types'
+import { JsonLd } from '@/components/ui/JsonLd'
+import { catalogService } from '../services/catalogService'
+import { absoluteUrl, breadcrumbJsonLd, slugPath } from '@/utils/seo'
+import type { Category } from '../types'
 import { primaryImage } from './ProductCard'
 import { ProductGrid } from './ProductGrid'
 
@@ -46,7 +46,7 @@ export async function ProductListing({
   const sort = SORTS.some((s) => s.value === params.sort) ? params.sort! : 'created_at_desc'
 
   const [data, categories] = await Promise.all([
-    getProducts({
+    catalogService.getProducts({
       q: params.q || undefined,
       category_id: category?.id,
       is_featured: params.featured === '1' ? true : undefined,
@@ -54,7 +54,7 @@ export async function ProductListing({
       page,
       page_size: PAGE_SIZE,
     }),
-    getCategories(),
+    catalogService.getCategories(),
   ])
 
   const keep = { q: params.q, featured: params.featured, sort: params.sort }

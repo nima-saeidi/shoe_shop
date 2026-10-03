@@ -1,29 +1,22 @@
 'use client'
 
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { Alert } from '@/components/ui/Alert'
 import { Spinner } from '@/components/ui/Spinner'
 import { StatusBadge } from '@/components/ui/StatusBadge'
-import { orderApi } from '@/lib/api/account'
-import { formatDate, formatToman, getApiError } from '@/lib/format'
-import { ORDER_STATUS_FA, PAYMENT_STATUS_FA } from '@/lib/labels'
-import type { Order, Page } from '@/types'
+import { formatDate, formatToman, getApiError } from '@/utils/format'
+import { ORDER_STATUS_FA, PAYMENT_STATUS_FA } from '@/utils/labels'
+import { useMyOrders } from '../hooks/useOrders'
 
-export default function OrdersPage() {
+export function OrdersPage() {
   const [page, setPage] = useState(1)
-  const [data, setData] = useState<Page<Order> | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    setData(null)
-    orderApi.mine(page, 10).then(setData).catch((e) => setError(getApiError(e)))
-  }, [page])
+  const { data, error, isPlaceholderData } = useMyOrders(page, 10)
 
   return (
     <>
       <h1 className="text-2xl font-bold">سفارش‌های من</h1>
-      {error && <Alert>{error}</Alert>}
+      {error && <Alert>{getApiError(error)}</Alert>}
       {!data && !error && <Spinner />}
       {data && data.items.length === 0 && (
         <div className="card p-10 text-center text-muted">
@@ -32,7 +25,7 @@ export default function OrdersPage() {
       )}
       {data && data.items.length > 0 && (
         <>
-          <ul className="space-y-3">
+          <ul className={`space-y-3 transition ${isPlaceholderData ? 'opacity-60' : ''}`}>
             {data.items.map((o) => (
               <li key={o.id}>
                 <Link href={`/account/orders/${o.id}`} className="card flex flex-wrap items-center justify-between gap-3 p-4 transition hover:border-brand/50">

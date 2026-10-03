@@ -1,10 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { useAuthStore } from '@/store/auth'
-import { useCartStore } from '@/store/cart'
+import { useAuthStore } from '@/app/store/authStore'
+import { useLogout } from '@/features/auth/hooks/useAuth'
 
 export const ACCOUNT_ITEMS = [
   { href: '/account', label: 'داشبورد', icon: '⌂' },
@@ -20,20 +20,14 @@ const isActive = (pathname: string, href: string) => (href === '/account' ? path
 
 export function AccountNav() {
   const pathname = usePathname()
-  const router = useRouter()
   const user = useAuthStore((s) => s.user)
+  const logout = useLogout()
   const [open, setOpen] = useState(false)
 
   // Close the mobile menu after navigating.
   useEffect(() => setOpen(false), [pathname])
 
   const current = ACCOUNT_ITEMS.find((i) => isActive(pathname, i.href))
-
-  function logout() {
-    useAuthStore.getState().logout()
-    useCartStore.getState().setCart(null)
-    router.replace('/')
-  }
 
   return (
     <aside className="card h-fit overflow-hidden">

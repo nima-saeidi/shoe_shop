@@ -1,4 +1,6 @@
-import type { InputHTMLAttributes } from 'react'
+'use client'
+
+import { useId, type InputHTMLAttributes } from 'react'
 
 interface Props extends InputHTMLAttributes<HTMLInputElement> {
   label: string
@@ -6,7 +8,9 @@ interface Props extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export function Field({ label, error, id, className = '', ...rest }: Props) {
-  const fieldId = id ?? rest.name
+  // Controlled fields may have neither id nor name; the generated id still ties the label to the input.
+  const generatedId = useId()
+  const fieldId = id ?? rest.name ?? generatedId
   return (
     <div className={className}>
       <label htmlFor={fieldId} className="mb-1.5 block text-sm font-medium">

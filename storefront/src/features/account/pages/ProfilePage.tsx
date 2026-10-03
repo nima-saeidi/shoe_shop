@@ -1,60 +1,56 @@
 'use client'
 
 import { useState, type FormEvent } from 'react'
+import { useAuthStore } from '@/app/store/authStore'
 import { Alert } from '@/components/ui/Alert'
-import { ProfileCompletion } from '@/components/account/ProfileCompletion'
 import { Field } from '@/components/ui/Field'
-import { authApi } from '@/lib/api/account'
-import { formatDate, getApiError } from '@/lib/format'
-import { isMobile } from '@/lib/profile'
-import { useAuthStore } from '@/store/auth'
+import { formatDate, getApiError } from '@/utils/format'
+import { ProfileCompletion } from '../components/ProfileCompletion'
+import { useChangePassword, useUpdateProfile } from '../hooks/useProfile'
+import { isMobile } from '../hooks/useProfileCompletion'
 
 type Msg = { kind: 'error' | 'success'; text: string } | null
 
-export default function ProfilePage() {
+export function ProfilePage() {
   const user = useAuthStore((s) => s.user)
+  const updateProfile = useUpdateProfile()
+  const changePassword = useChangePassword()
   const [profileMsg, setProfileMsg] = useState<Msg>(null)
   const [passMsg, setPassMsg] = useState<Msg>(null)
-  const [busy, setBusy] = useState(false)
+  const busy = updateProfile.isPending || changePassword.isPending
 
-  async function saveProfile(e: FormEvent<HTMLFormElement>) {
+  function saveProfile(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const f = new FormData(e.currentTarget)
     const phone = String(f.get('phone_number')).trim()
     if (phone && !isMobile(phone)) return setProfileMsg({ kind: 'error', text: 'شماره موبایل باید با ۰۹ شروع شود و ۱۱ رقم باشد.' })
-    setBusy(true)
     setProfileMsg(null)
-    try {
-      const updated = await authApi.updateMe({
-        full_name: String(f.get('full_name')).trim(),
-        phone_number: String(f.get('phone_number')).trim() || undefined,
-      })
-      useAuthStore.getState().setUser(updated)
-      setProfileMsg({ kind: 'success', text: 'اطلاعات ذخیره شد.' })
-    } catch (err) {
-      setProfileMsg({ kind: 'error', text: getApiError(err) })
-    } finally {
-      setBusy(false)
-    }
+    updateProfile.mutate(
+      { full_name: String(f.get('full_name')).trim(), phone_number: phone || undefined },
+      {
+        onSuccess: () => setProfileMsg({ kind: 'success', text: 'اطلاعات ذخیره شد.' }),
+        onError: (err) => setProfileMsg({ kind: 'error', text: getApiError(err) }),
+      },
+    )
   }
 
-  async function changePassword(e: FormEvent<HTMLFormElement>) {
+  function submitPassword(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     const form = e.currentTarget
     const f = new FormData(form)
     const next = String(f.get('new_password'))
     if (next !== String(f.get('confirm'))) return setPassMsg({ kind: 'error', text: 'تکرار رمز جدید مطابقت ندارد.' })
-    setBusy(true)
     setPassMsg(null)
-    try {
-      await authApi.changePassword(String(f.get('current_password')), next)
-      form.reset()
-      setPassMsg({ kind: 'success', text: 'رمز عبور تغییر کرد.' })
-    } catch (err) {
-      setPassMsg({ kind: 'error', text: getApiError(err) })
-    } finally {
-      setBusy(false)
-    }
+    changePassword.mutate(
+      { current_password: String(f.get('current_password')), new_password: next },
+      {
+        onSuccess: () => {
+          form.reset()
+          setPassMsg({ kind: 'success', text: 'رمز عبور تغییر کرد.' })
+        },
+        onError: (err) => setPassMsg({ kind: 'error', text: getApiError(err) }),
+      },
+    )
   }
 
   return (
@@ -89,7 +85,7 @@ export default function ProfilePage() {
         </form>
       )}
 
-      <form onSubmit={changePassword} className="card space-y-4 p-5">
+      <form onSubmit={submitPassword} className="card space-y-4 p-5">
         <h2 className="font-bold">تغییر رمز عبور</h2>
         {passMsg && <Alert kind={passMsg.kind}>{passMsg.text}</Alert>}
         <div className="grid gap-4 sm:grid-cols-3">

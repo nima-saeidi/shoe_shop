@@ -1,4 +1,4 @@
-import { STATUS_TONE } from '@/lib/labels'
+import { STATUS_TONE } from '@/utils/labels'
 
 export function StatusBadge({ value, labels }: { value: string; labels: Record<string, string> }) {
   return (

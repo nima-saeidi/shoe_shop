@@ -1,4 +1,4 @@
-import { formatToman } from '@/lib/format'
+import { formatToman } from '@/utils/format'
 
 export function Price({ price, discount }: { price: number; discount?: number | null }) {
   const hasDiscount = discount != null && discount > 0 && discount < price
